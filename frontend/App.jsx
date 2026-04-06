@@ -70,12 +70,12 @@ const Hero = () => (
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a href="#upload" className="w-full sm:w-auto bg-white text-black hover:bg-stone-200 px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all group">
-            <Upload className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            Subir archivos JSON
-          </a>
-          <a href="#how-it-works" className="w-full sm:w-auto glass hover:bg-white/10 px-8 py-4 rounded-2xl font-bold border border-white/10 transition-all flex items-center justify-center gap-2">
-            Ver Tutorial <ArrowRight className="w-5 h-5" />
+          <button onClick={() => document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})} className="w-full sm:w-auto bg-white text-black hover:bg-stone-200 px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all group">
+            <Zap className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            Descargar Extensión
+          </button>
+          <a href="#faq" className="w-full sm:w-auto glass hover:bg-white/10 px-8 py-4 rounded-2xl font-bold border border-white/10 transition-all flex items-center justify-center gap-2">
+            Instrucciones <ArrowRight className="w-5 h-5" />
           </a>
         </div>
 
@@ -160,17 +160,17 @@ const HowItWorks = () => (
           <Step
             number="1"
             title="Instala la Extensión"
-            description="Agrega la extensión TóxicaTracker a tu navegador Chrome (¡Es gratis y segura!)."
+            description="Descarga nuestra extensión gratuita. Abre chrome://extensions, activa el 'Modo Desarrollador' en la esquina superior derecha, y selecciona 'Cargar Descomprimido' eligiendo la carpeta descargada."
           />
           <Step
             number="2"
             title="Abre Instagram Web"
-            description="Inicia sesión en instagram.com normalmente en otra pestaña."
+            description="Ve a instagram.com e inicia sesión normalmente. No cerraremos tu sesión ni pediremos tu contraseña."
           />
           <Step
             number="3"
             title="Extrae la verdad en 10 segs"
-            description="Haz click en el botón de la extensión. Extraerá las listas instantáneamente sin contraseñas y te traerá de vuelta aquí."
+            description="Haz clic en el ícono de ToxicTracker (rompecabezas de Chrome) y presiona Extraer. Los cálculos se harán solos y te redirigirá aquí."
           />
         </div>
       </div>
@@ -210,16 +210,16 @@ const Faq = () => {
   
   const faqs = [
     {
-      q: '🤔 ¿Cómo descargo mi información de Instagram?',
-      a: 'Ve a la app de Instagram > Configuración y privacidad > Centro de cuentas > Tu información y permisos > Descargar tu información. Solicita una copia y asegúrate de elegir el formato JSON (no HTML). Luego de unos minutos o horas, te llegará un correo. Al descargarlo, ubica los archivos "followers_1.json" y "following.json" (están en la carpeta "connections").'
+      q: '🤔 ¿Dónde consigo la Extensión de Chrome?',
+      a: 'Pídele al creador de esta página que te envíe la carpeta "extension". Dado que es una herramienta súper rápida y "no-oficial" en los ojos de Meta, se instala manualmente. Una vez tengas la carpeta, vas a la barra de Chrome, escribes "chrome://extensions", activas el "Modo Desarrollador" (arriba a la derecha) y seleccionas "Cargar descomprimida" buscando tu carpeta.'
     },
     {
-      q: '🔒 ¿Es seguro darles mis archivos JSON?',
-      a: '¡Sí! Al subir tus archivos, TóxicaTracker los envía de forma segura a nuestro backend y los procesa sin guardar contraseñas ni el acceso director a tu Instagram. De hecho, no necesitas iniciar sesión con Instagram en ninguna parte de nuestra app.'
+      q: '🔒 ¿Es seguro usar esta extensión?',
+      a: '¡Totalmente! TóxicaTracker NUNCA te pide que inicies sesión en nuestra página. La extensión usa la misma sesión segura que ya tienes abierta pasivamente en la pestaña de Instagram. Además, todos los cruces y matemáticas de quién te dejó de seguir suceden puramente en la memoria de TU dispositivo. Nadie más accede a esa información.'
     },
     {
-      q: '👀 ¿Se enterarán si reviso quién me dejó de seguir?',
-      a: '¡Para nada! Instagram no le notifica a nadie que descargaste tus datos ni que los subiste aquí. Tu investigación es 100% privada y confidencial, estilo ninja.'
+      q: '👀 ¿Instagram me puede banear por esto?',
+      a: 'Muy poco probable. A diferencia de bots o programas en la nube que hacen scraping masivo (y son penalizados), la extensión replica exactamente la velocidad humana de mirar tu propia lista de seguidores en tu propio navegador. Nadie, ni Instagram, recibe notificaciones raras de tu cuenta.'
     }
   ]
 

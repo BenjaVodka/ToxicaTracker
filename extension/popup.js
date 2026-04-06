@@ -31,7 +31,7 @@ document.getElementById('startBtn').addEventListener('click', async () => {
         document.getElementById('status').innerText = `✅ ¡Obtenidos! Redirigiendo...`;
         
         chrome.storage.local.set({ toxicData: data }, () => {
-             chrome.tabs.create({ url: "http://localhost:5173/?mode=extension" });
+             chrome.tabs.create({ url: "https://toxicatracker.vercel.app/?mode=extension" });
         });
     });
 });
