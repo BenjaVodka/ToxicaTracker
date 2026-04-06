@@ -1,0 +1,25 @@
+{
+  "name": "toxic-tracker-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Professional monorepo structure for ToxicTracker",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev -w frontend",
+    "dev:backend": "cd backend && ./mvnw spring-boot:run",
+    "build:all": "npm run build -w frontend && cd backend && ./mvnw clean package",
+    "install:all": "npm install && cd backend && ./mvnw dependency:resolve"
+  },
+  "keywords": [
+    "toxictracker",
+    "monorepo",
+    "spring-boot",
+    "react",
+    "vite"
+  ],
+  "author": "Benjamin",
+  "license": "MIT"
+}
