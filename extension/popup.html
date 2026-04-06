@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ToxicTracker</title>
+    <style>
+        body { width: 300px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #09090b; color: white; margin: 0; padding: 20px; text-align: center; }
+        h1 { font-size: 1.2rem; margin-top: 0; }
+        .toxic { color: #10b981; }
+        button { background-color: #10b981; color: white; border: none; padding: 12px 20px; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s; width: 100%; margin-top: 15px;}
+        button:hover { background-color: #059669; }
+        #status { margin-top: 15px; font-size: 0.9rem; color: #a8a29e; }
+        .instructions { font-size: 0.8rem; text-align: left; margin-top: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px;}
+    </style>
+</head>
+<body>
+    <h1>Tóxica<span class="toxic">Tracker</span></h1>
+    <div class="instructions">
+        1. Entra a <b>instagram.com</b> e inicia sesión.<br>
+        2. Vuelve a abrir esta ventana.<br>
+        3. Haz click en el botón abajo.
+    </div>
+    <button id="startBtn">Extraer Datos ⚡</button>
+    <div id="status">Esperando...</div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

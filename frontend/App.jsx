@@ -159,18 +159,18 @@ const HowItWorks = () => (
         <div className="space-y-4">
           <Step
             number="1"
-            title="Solicita tus datos a Instagram"
-            description="Ve a Configuración > Centro de Cuentas > Tu información. Solicita tus datos de 'Seguidores y seguidos' en formato JSON."
+            title="Instala la Extensión"
+            description="Agrega la extensión TóxicaTracker a tu navegador Chrome (¡Es gratis y segura!)."
           />
           <Step
             number="2"
-            title="Sube el archivo aquí"
-            description="Una vez que Instagram te envíe el correo con el link (tarda unos minutos), descárgalo y sube el archivo 'followers_1.json'."
+            title="Abre Instagram Web"
+            description="Inicia sesión en instagram.com normalmente en otra pestaña."
           />
           <Step
             number="3"
-            title="¡Velo todo!"
-            description="Nuestro algoritmo procesará los datos al instante y te mostrará los traidores, los nuevos y los que solo te usan."
+            title="Extrae la verdad en 10 segs"
+            description="Haz click en el botón de la extensión. Extraerá las listas instantáneamente sin contraseñas y te traerá de vuelta aquí."
           />
         </div>
       </div>
@@ -284,7 +284,44 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('toxic_token') || null);
+  
+  // Modificado: Escuchar eventos de la extension
+  React.useEffect(() => {
+    const handleMessage = (event) => {
+      // Verificamos que el mensaje provenga de nuestra propia ventana/extension
+      if (event.data && event.data.type === 'TOXIC_EXTENSION_DATA') {
+        const { followers, following } = event.data.payload;
+        
+        // Ejecutamos el algoritmo matematico localmente (Cero servidores, 100% privado)
+        const followersUsernames = followers.map(f => f.username);
+        const followingUsernames = following.map(f => f.username);
+
+        const notFollowingBack = followingUsernames.filter(u => !followersUsernames.includes(u));
+        const idontFollowBack = followersUsernames.filter(u => !followingUsernames.includes(u));
+
+        // Para calcular unfollowers (traicioneros en el tiempo), leemos localStorage
+        const previousFollowers = JSON.parse(localStorage.getItem('toxic_last_followers') || '[]');
+        const lostFollowers = previousFollowers.filter(u => !followersUsernames.includes(u));
+
+        // Guardamos el estado actual para la proxima vez
+        localStorage.setItem('toxic_last_followers', JSON.stringify(followersUsernames));
+
+        setLoading(false);
+        setResults({
+          message: lostFollowers.length > 0 || notFollowingBack.length > 0 ? "¡Se prendió esto! Hay drama. 🔥" : "¡Todo tranqui por ahora! ✨",
+          followersCount: followers.length,
+          followingCount: following.length,
+          notFollowingBack,
+          lostFollowers,
+          fans: idontFollowBack
+        });
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  const [token, setToken] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [email, setEmail] = useState('');
@@ -479,13 +516,25 @@ export default function App() {
                     </motion.div>
                   )}
 
-                  <button
-                    onClick={handleUpload}
-                    disabled={loading}
-                    className="w-full bg-toxic hover:bg-toxic-dark disabled:opacity-50 disabled:cursor-not-allowed text-white py-5 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-toxic/20 flex items-center justify-center gap-3"
-                  >
-                    {loading ? <><Loader2 className="w-6 h-6 animate-spin" /> Analizando...</> : <><Zap className="w-6 h-6 fill-white" /> ¡Revelar la verdad!</>}
-                  </button>
+                  <div className="flex flex-col gap-4">
+                    <button
+                      onClick={() => {
+                        window.open("https://instagram.com", "_blank");
+                        // Luego de esto, el usuario usa la extension
+                      }}
+                      className="w-full bg-toxic hover:bg-toxic-dark text-white py-5 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-toxic/20 flex items-center justify-center gap-3"
+                    >
+                      <Zap className="w-6 h-6 fill-white" /> 1. Abre Instagram y usa la Extensión
+                    </button>
+                    
+                    <button
+                      onClick={handleUpload}
+                      disabled={loading}
+                      className="w-full bg-stone-800 hover:bg-stone-700 disabled:opacity-50 disabled:cursor-not-allowed text-stone-300 py-3 rounded-2xl font-bold text-sm transition-all border border-stone-600 flex items-center justify-center gap-3"
+                    >
+                      {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Analizando...</> : "2. O usa archivos JSON (Método lento)"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
