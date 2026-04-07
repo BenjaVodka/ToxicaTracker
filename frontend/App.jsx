@@ -27,7 +27,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { auth, googleProvider } from './firebase'
 import { signInWithPopup, signOut } from 'firebase/auth'
 
-const Nav = ({ token, handleLogout, onLoginClick }) => (
+const Nav = ({ token, results, handleLogout, onLoginClick }) => (
   <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/10">
     <div className="container mx-auto px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-2">
@@ -43,11 +43,10 @@ const Nav = ({ token, handleLogout, onLoginClick }) => (
         <div className="flex items-center gap-4">
           <button 
             onClick={() => {
-              if (window.resultsLoaded) {
+              if (results) {
                  document.getElementById('results-section')?.scrollIntoView({behavior: 'smooth'});
               } else {
-                 // Forces a refresh if not loaded
-                 window.location.reload();
+                 alert("Buscando tus datos en la nube... Un momento por favor. ☁️");
               }
             }} 
             className="hidden md:flex items-center gap-2 text-toxic font-black text-xs uppercase tracking-widest hover:text-white transition-colors"
@@ -562,7 +561,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
-      <Nav token={token} handleLogout={handleLogout} onLoginClick={() => setShowAuth(true)} />
+      <Nav 
+        token={token} 
+        results={results}
+        handleLogout={handleLogout} 
+        onLoginClick={() => setShowAuth(true)} 
+      />
       
       {checkingHistory && (
         <div className="fixed inset-0 z-[60] bg-dark-950/80 backdrop-blur-xl flex flex-col items-center justify-center gap-6">
@@ -727,7 +731,7 @@ export default function App() {
             <Faq />
           </>
         ) : (
-          <section className="pt-32 pb-20 container mx-auto px-6">
+          <section id="results-section" className="pt-32 pb-20 container mx-auto px-6">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-5xl mx-auto">
               <div className="flex items-center justify-between mb-12">
                 <div>
