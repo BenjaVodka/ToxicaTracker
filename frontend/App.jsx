@@ -18,7 +18,9 @@ import {
   UserMinus,
   Loader2,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  CloudLightning,
+  Sparkles
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { auth, googleProvider } from './firebase'
@@ -154,52 +156,35 @@ const Step = ({ number, title, description }) => (
 )
 
 const HowItWorks = () => (
-  <section id="how-it-works" className="py-24">
-    <div className="container mx-auto px-6 flex flex-col md:flex-row gap-16 items-center">
-      <div className="md:w-1/2">
-        <h2 className="text-4xl font-bold mb-8">Cómo funciona en solo <span className="text-toxic">3 pasos</span></h2>
-        <div className="space-y-4">
-          <Step
-            number="1"
-            title="Instala la Extensión"
-            description="Consigue ToxicTracker en la Chrome Web Store. Es gratuita y se instala con un solo click. Pronto aparecerá el ícono del corazón roto en tu barra de herramientas."
-          />
-          <Step
-            number="2"
-            title="Abre Instagram Web"
-            description="Ve a instagram.com e inicia sesión normalmente. No cerraremos tu sesión ni pediremos tu contraseña."
-          />
-          <Step
-            number="3"
-            title="Extrae la verdad en 10 segs"
-            description="Haz clic en el ícono de ToxicTracker y presiona 'Extraer'. Los cálculos se harán solos y te redirigirá aquí para ver el drama."
-          />
-        </div>
+  <section id="how-it-works" className="py-24 relative overflow-hidden">
+    <div className="absolute top-1/2 left-0 w-96 h-96 bg-toxic/5 blur-[100px] rounded-full -translate-y-1/2" />
+    
+    <div className="container mx-auto px-6">
+      <div className="text-center mb-16">
+        <h2 className="text-4xl md:text-5xl font-black mb-6">
+          La verdad en <span className="text-toxic">3 pasos</span>
+        </h2>
+        <p className="text-stone-400 max-w-2xl mx-auto">
+          Nuestra tecnología sincroniza tu círculo social de forma segura y privada, comparando cada escaneo para detectar traiciones en tiempo real.
+        </p>
       </div>
-      <div className="md:w-1/2 relative">
-        <div className="glass rounded-3xl p-4 overflow-hidden shadow-2xl border-white/10">
-          <div className="bg-stone-900 rounded-2xl p-6 aspect-video flex flex-col justify-center items-center gap-4 text-center">
-            <div className="w-16 h-16 bg-toxic/20 rounded-full flex items-center justify-center animate-bounce">
-              <FileJson className="w-8 h-8 text-toxic" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-bold">Procesando followers_1.json...</p>
-              <p className="text-xs text-stone-500">Analizando 2,451 conexiones</p>
-            </div>
-            <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
-              <div className="bg-toxic h-full w-2/3" />
-            </div>
+
+      <div className="max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="glass p-8 rounded-3xl border-white/5 relative">
+             <div className="w-10 h-10 rounded-full bg-toxic/20 flex items-center justify-center font-bold text-toxic mb-6">1</div>
+             <h3 className="font-bold mb-3">Sincroniza</h3>
+             <p className="text-stone-400 text-xs leading-relaxed">Usa la extensión en Instagram Web. Solo toma 10 segundos extraer los datos de forma segura.</p>
           </div>
-        </div>
-        <div className="absolute -bottom-6 -right-6 glass p-6 rounded-2xl border-toxic/20 rotate-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-500/20 rounded-lg">
-              <TrendingDown className="w-5 h-5 text-red-500" />
-            </div>
-            <div>
-              <p className="text-xs text-stone-400 uppercase font-bold tracking-wider">Unfollowed</p>
-              <p className="text-2xl font-bold">-14</p>
-            </div>
+          <div className="glass p-8 rounded-3xl border-white/5 relative">
+             <div className="w-10 h-10 rounded-full bg-toxic/20 flex items-center justify-center font-bold text-toxic mb-6">2</div>
+             <h3 className="font-bold mb-3">Guarda</h3>
+             <p className="text-stone-400 text-xs leading-relaxed">Tus datos se cifran y se guardan en tu "Bunker" personal en la nube de Render.</p>
+          </div>
+          <div className="glass p-8 rounded-3xl border-white/5 relative">
+             <div className="w-10 h-10 rounded-full bg-toxic/20 flex items-center justify-center font-bold text-toxic mb-6">3</div>
+             <h3 className="font-bold mb-3">Descubre</h3>
+             <p className="text-stone-400 text-xs leading-relaxed">Comparamos tu estado actual con el historial. Si alguien te dejó de seguir, lo sabrás al instante.</p>
           </div>
         </div>
       </div>
@@ -281,6 +266,8 @@ const Footer = () => (
   </footer>
 )
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 export default function App() {
   const [files, setFiles] = useState({ followers: null, following: null });
   const [loading, setLoading] = useState(false);
@@ -321,7 +308,7 @@ export default function App() {
         // --- NUEVO: Sincronización con PostgreSQL ---
         const token = localStorage.getItem('toxic_token');
         if (token) {
-          fetch('/api/analysis/sync', {
+          fetch(`${API_BASE_URL}/api/analysis/sync`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -353,19 +340,43 @@ export default function App() {
     if (savedToken) setToken(savedToken);
   }, []);
 
+  // --- NUEVO: Cargar historial persistente al entrar ---
+  React.useEffect(() => {
+    if (token) {
+      fetch(`${API_BASE_URL}/api/analysis/latest`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => {
+        if (res.status === 200) return res.json();
+        return null;
+      })
+      .then(data => {
+        if (data) {
+          setResults({
+            message: "Datos recuperados de la nube ☁️",
+            followersCount: data.followersCount,
+            followingCount: data.followingCount,
+            notFollowingBack: [], 
+            lostFollowers: [],
+            fans: [],
+            isFromCloud: true
+          });
+        }
+      })
+      .catch(err => console.error("Error cargando historial:", err));
+    }
+  }, [token]);
+
   const handleAuth = async () => {
     setLoading(true);
     setError(null);
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      
-      // Obtenemos el JWT token seguro de Firebase
       const jwtToken = await result.user.getIdToken();
       setToken(jwtToken);
       localStorage.setItem('toxic_token', jwtToken);
       setShowAuth(false);
-      setResults(null); 
-      
+      // results se cargará solo por el useEffect de arriba
     } catch (err) {
       console.error(err);
       setError("Error al iniciar sesión con Google. Revisa tu conexión o intenta más tarde.");
@@ -408,7 +419,7 @@ export default function App() {
       formData.append('followers', files.followers);
       formData.append('following', files.following);
 
-      const response = await fetch('/api/analysis/upload', {
+      const response = await fetch(`${API_BASE_URL}/api/analysis/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${activeToken}`
@@ -598,7 +609,14 @@ export default function App() {
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-5xl mx-auto">
               <div className="flex items-center justify-between mb-12">
                 <div>
-                  <h1 className="text-4xl font-black mb-2 text-gradient">{results.message}</h1>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h1 className="text-4xl font-black text-gradient">{results.message}</h1>
+                    {results.isFromCloud && (
+                      <div className="flex items-center gap-1.5 px-3 py-1 bg-toxic/10 border border-toxic/20 rounded-full text-[10px] font-black uppercase tracking-widest text-toxic animate-pulse">
+                        <CloudLightning className="w-3 h-3" /> Cloud Sync
+                      </div>
+                    )}
+                  </div>
                   <p className="text-stone-400">Análisis local completado. Tu chisme está a salvo. 🔒</p>
                 </div>
                 <button onClick={() => setResults(null)} className="glass px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-white/10 transition-all">

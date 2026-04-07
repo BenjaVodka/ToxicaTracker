@@ -98,4 +98,9 @@ public class AnalysisService {
                 .newUnfollowers(newUnfollowers)
                 .build();
     }
+
+    public Optional<FollowersSnapshot> getLatestSnapshot(AppUser user) {
+        List<FollowersSnapshot> snapshots = snapshotRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        return snapshots.stream().findFirst();
+    }
 }
