@@ -173,18 +173,18 @@ const HowItWorks = () => (
         <div className="grid md:grid-cols-3 gap-8">
           <div className="glass p-8 rounded-3xl border-white/5 relative">
              <div className="w-10 h-10 rounded-full bg-toxic/20 flex items-center justify-center font-bold text-toxic mb-6">1</div>
-             <h3 className="font-bold mb-3">Sincroniza</h3>
-             <p className="text-stone-400 text-xs leading-relaxed">Usa la extensión en Instagram Web. Solo toma 10 segundos extraer los datos de forma segura.</p>
+             <h3 className="font-bold mb-3">Instala la Extensión</h3>
+             <p className="text-stone-400 text-xs leading-relaxed">Consigue ToxicTracker en la Chrome Web Store. Es gratuita y se instala con un solo click.</p>
           </div>
           <div className="glass p-8 rounded-3xl border-white/5 relative">
              <div className="w-10 h-10 rounded-full bg-toxic/20 flex items-center justify-center font-bold text-toxic mb-6">2</div>
-             <h3 className="font-bold mb-3">Guarda</h3>
-             <p className="text-stone-400 text-xs leading-relaxed">Tus datos se cifran y se guardan en tu "Bunker" personal en la nube de Render.</p>
+             <h3 className="font-bold mb-3">Abre Instagram Web</h3>
+             <p className="text-stone-400 text-xs leading-relaxed">Ve a instagram.com e inicia sesión normalmente. No pediremos tu contraseña.</p>
           </div>
           <div className="glass p-8 rounded-3xl border-white/5 relative">
              <div className="w-10 h-10 rounded-full bg-toxic/20 flex items-center justify-center font-bold text-toxic mb-6">3</div>
-             <h3 className="font-bold mb-3">Descubre</h3>
-             <p className="text-stone-400 text-xs leading-relaxed">Comparamos tu estado actual con el historial. Si alguien te dejó de seguir, lo sabrás al instante.</p>
+             <h3 className="font-bold mb-3">Extrae la verdad</h3>
+             <p className="text-stone-400 text-xs leading-relaxed">Haz clic en el ícono de ToxicTracker y presiona 'Extraer'. Los cálculos se harán solos.</p>
           </div>
         </div>
       </div>
