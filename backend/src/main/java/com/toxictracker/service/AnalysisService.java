@@ -60,14 +60,19 @@ public class AnalysisService {
     }
 
     public AnalysisResponse analyze(AppUser user, Set<String> followers, Set<String> following, String ipAddress) {
-        // Find users who you follow but don't follow you back
+        // Find users who you follow but don't follow you back (Traidores)
         Set<String> notFollowingMeBack = following.stream()
                 .filter(u -> !followers.contains(u))
                 .collect(Collectors.toSet());
 
-        // Find users who follow you but you don't follow back
+        // Find users who follow you but you don't follow back (Fans)
         Set<String> iDontFollowBack = followers.stream()
                 .filter(u -> !following.contains(u))
+                .collect(Collectors.toSet());
+
+        // Find mutual followers
+        Set<String> mutuals = following.stream()
+                .filter(followers::contains)
                 .collect(Collectors.toSet());
 
         // Get last snapshot to detect unfollowers
@@ -80,6 +85,11 @@ public class AnalysisService {
                     .filter(u -> !followers.contains(u))
                     .collect(Collectors.toSet());
         }
+
+        // Metrics calculations
+        double toxicScore = following.isEmpty() ? 0 : (notFollowingMeBack.size() * 100.0 / following.size());
+        int unionSize = followers.size() + following.size() - mutuals.size();
+        double mutualityRate = unionSize == 0 ? 0 : (mutuals.size() * 100.0 / unionSize);
 
         // Save new snapshot for future comparison
         FollowersSnapshot snapshot = FollowersSnapshot.builder()
@@ -96,6 +106,41 @@ public class AnalysisService {
                 .notFollowingMeBack(notFollowingMeBack)
                 .iDontFollowBack(iDontFollowBack)
                 .newUnfollowers(newUnfollowers)
+                .fans(iDontFollowBack) // En este contexto, los que no sigues de vuelta son tus fans
+                .toxicScore(Math.round(toxicScore * 10) / 10.0)
+                .mutualityRate(Math.round(mutualityRate * 10) / 10.0)
+                .build();
+    }
+
+    public AnalysisResponse buildResponseFromSnapshot(FollowersSnapshot snapshot) {
+        Set<String> followers = snapshot.getFollowers();
+        Set<String> following = snapshot.getFollowing();
+
+        Set<String> notFollowingMeBack = following.stream()
+                .filter(u -> !followers.contains(u))
+                .collect(Collectors.toSet());
+
+        Set<String> iDontFollowBack = followers.stream()
+                .filter(u -> !following.contains(u))
+                .collect(Collectors.toSet());
+
+        Set<String> mutuals = following.stream()
+                .filter(followers::contains)
+                .collect(Collectors.toSet());
+
+        double toxicScore = following.isEmpty() ? 0 : (notFollowingMeBack.size() * 100.0 / following.size());
+        int unionSize = followers.size() + following.size() - mutuals.size();
+        double mutualityRate = unionSize == 0 ? 0 : (mutuals.size() * 100.0 / unionSize);
+
+        return AnalysisResponse.builder()
+                .followersCount(followers.size())
+                .followingCount(following.size())
+                .notFollowingMeBack(notFollowingMeBack)
+                .iDontFollowBack(iDontFollowBack)
+                .newUnfollowers(new HashSet<>()) // No podemos comparar con "nada" si es el snapshot actual
+                .fans(iDontFollowBack)
+                .toxicScore(Math.round(toxicScore * 10) / 10.0)
+                .mutualityRate(Math.round(mutualityRate * 10) / 10.0)
                 .build();
     }
 

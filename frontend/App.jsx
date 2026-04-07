@@ -155,6 +155,81 @@ const Step = ({ number, title, description }) => (
   </div>
 )
 
+const MetricCard = ({ icon, label, value, subLabel, highlight }) => (
+  <div className={`glass p-8 rounded-3xl border border-white/5 relative overflow-hidden group hover:border-white/20 transition-all ${highlight ? 'bg-toxic/5' : ''}`}>
+    <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/5 blur-2xl rounded-full group-hover:scale-110 transition-transform" />
+    <div className="flex items-center gap-3 mb-6 relative z-10">
+      <div className="p-2 bg-white/5 rounded-xl border border-white/5">
+        {React.cloneElement(icon, { className: "w-5 h-5 " + icon.props.className })}
+      </div>
+      <p className="text-xs text-stone-400 uppercase font-black tracking-widest">{label}</p>
+    </div>
+    <div className={`text-4xl font-black mb-1 relative z-10 ${highlight ? 'text-toxic' : ''}`}>{value}</div>
+    <p className="text-[10px] text-stone-500 font-bold relative z-10">{subLabel}</p>
+  </div>
+)
+
+const UserList = ({ title, users, count, variantSet = "toxic" }) => (
+  <div className="glass rounded-[2rem] border-white/5 overflow-hidden flex flex-col h-full">
+    <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+      <h3 className="font-bold text-lg">{title}</h3>
+      <span className={`px-4 py-1 rounded-full text-xs font-black ${
+        variantSet === 'danger' ? 'bg-red-500/20 text-red-500' : 
+        variantSet === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 
+        'bg-toxic/20 text-toxic'
+      }`}>
+        {count}
+      </span>
+    </div>
+    <div className="flex-1 overflow-y-auto custom-scrollbar max-h-[500px]">
+      {users.length > 0 ? (
+        <div className="divide-y divide-white/5">
+          {users.map((user) => (
+            <div key={user} className="group p-5 flex items-center justify-between hover:bg-white/[0.03] transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl overflow-hidden glass border border-white/10 flex-shrink-0 group-hover:scale-105 transition-transform bg-stone-900 flex items-center justify-center font-black text-toxic">
+                   <img 
+                    src={`https://unavatar.io/instagram/${user}`} 
+                    alt={user}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = `<span class="text-xl">${user[0].toUpperCase()}</span>`;
+                    }}
+                  />
+                </div>
+                <div>
+                  <p className="font-black text-stone-100 group-hover:text-toxic transition-colors tracking-tight">@{user}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                     <span className="w-1.5 h-1.5 rounded-full bg-toxic/40" />
+                     <p className="text-[10px] text-stone-500 uppercase font-black tracking-widest">Cuenta Activa</p>
+                  </div>
+                </div>
+              </div>
+              <a 
+                href={`https://instagram.com/${user}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="p-3 bg-white/5 rounded-xl hover:bg-toxic hover:text-white transition-all transform group-hover:translate-x-1"
+              >
+                <Instagram className="w-4 h-4" />
+              </a>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="p-20 text-center space-y-4">
+          <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+          </div>
+          <p className="text-stone-400 font-medium">¡Sin traidores a la vista!</p>
+        </div>
+      )}
+    </div>
+  </div>
+)
+
 const HowItWorks = () => (
   <section id="how-it-works" className="py-24 relative overflow-hidden">
     <div className="absolute top-1/2 left-0 w-96 h-96 bg-toxic/5 blur-[100px] rounded-full -translate-y-1/2" />
@@ -295,6 +370,12 @@ export default function App() {
         // Guardamos el estado actual para la proxima vez
         localStorage.setItem('toxic_last_followers', JSON.stringify(followersUsernames));
 
+        // Calculo de métricas adicionales locales
+        const mutualsCount = followingUsernames.filter(u => followersUsernames.includes(u)).length;
+        const toxicScore = followingUsernames.length === 0 ? 0 : (notFollowingBack.length * 100 / followingUsernames.length);
+        const unionSize = followersUsernames.length + followingUsernames.length - mutualsCount;
+        const mutualityRate = unionSize === 0 ? 0 : (mutualsCount * 100 / unionSize);
+
         setLoading(false);
         setResults({
           message: lostFollowers.length > 0 || notFollowingBack.length > 0 ? "¡Se prendió esto! Hay drama. 🔥" : "¡Todo tranqui por ahora! ✨",
@@ -302,7 +383,9 @@ export default function App() {
           followingCount: following.length,
           notFollowingBack,
           lostFollowers,
-          fans: idontFollowBack
+          fans: idontFollowBack,
+          toxicScore: Math.round(toxicScore * 10) / 10,
+          mutualityRate: Math.round(mutualityRate * 10) / 10
         });
 
         // --- NUEVO: Sincronización con PostgreSQL ---
@@ -356,9 +439,11 @@ export default function App() {
             message: "Datos recuperados de la nube ☁️",
             followersCount: data.followersCount,
             followingCount: data.followingCount,
-            notFollowingBack: [], 
-            lostFollowers: [],
-            fans: [],
+            notFollowingBack: data.notFollowingMeBack || [], 
+            lostFollowers: data.newUnfollowers || [],
+            fans: data.fans || [],
+            toxicScore: data.toxicScore || 0,
+            mutualityRate: data.mutualityRate || 0,
             isFromCloud: true
           });
         }
@@ -443,7 +528,9 @@ export default function App() {
         followingCount: data.followingCount,
         notFollowingBack: data.notFollowingMeBack || [],
         lostFollowers: data.newUnfollowers || [],
-        fans: data.idontFollowBack || []
+        fans: data.fans || [],
+        toxicScore: data.toxicScore || 0,
+        mutualityRate: data.mutualityRate || 0
       });
 
     } catch (err) {
@@ -612,72 +699,85 @@ export default function App() {
                   <div className="flex items-center gap-3 mb-2">
                     <h1 className="text-4xl font-black text-gradient">{results.message}</h1>
                     {results.isFromCloud && (
-                      <div className="flex items-center gap-1.5 px-3 py-1 bg-toxic/10 border border-toxic/20 rounded-full text-[10px] font-black uppercase tracking-widest text-toxic animate-pulse">
+                      <div className="flex items-center gap-1.5 px-3 py-1 bg-toxic/10 border border-toxic/20 rounded-full text-[10px] font-black uppercase tracking-widest text-toxic">
                         <CloudLightning className="w-3 h-3" /> Cloud Sync
                       </div>
                     )}
                   </div>
-                  <p className="text-stone-400">Análisis local completado. Tu chisme está a salvo. 🔒</p>
+                  <p className="text-stone-400">Análisis completado. Tu chisme está a salvo. 🔒</p>
                 </div>
                 <button onClick={() => setResults(null)} className="glass px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-white/10 transition-all">
-                  <LogOut className="w-4 h-4" /> Nuevo reporte
+                  <ArrowRight className="w-4 h-4 rotate-180" /> Nuevo reporte
                 </button>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-8">
-                  <div className="glass p-8 rounded-3xl border-white/10">
-                    <h3 className="text-lg font-bold mb-6 text-stone-300 flex items-center gap-2">
-                      <Zap className="w-5 h-5 text-yellow-500" /> Resumen Real-time
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                        <p className="text-3xl font-black">{results.followersCount}</p>
-                        <p className="text-xs text-stone-500 uppercase tracking-tighter mt-1 font-bold">Fans</p>
-                      </div>
-                      <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                        <p className="text-3xl font-black">{results.followingCount}</p>
-                        <p className="text-xs text-stone-500 uppercase tracking-tighter mt-1 font-bold">Siguiendo</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Changes compared to last time */}
-                  <div className="glass p-8 rounded-3xl border-white/10">
-                    <h3 className="text-lg font-bold mb-6 text-stone-300">Novedades desde la última vez</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
-                        <span className="text-emerald-500 font-bold">Fans (tú no los sigues)</span>
-                        <span className="text-xl font-black">{results.fans.length}</span>
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-red-500/5 rounded-2xl border border-red-500/10">
-                        <span className="text-red-500 font-bold">Te dejaron de seguir</span>
-                        <span className="text-xl font-black">{results.lostFollowers.length}</span>
-                      </div>
-                    </div>
+              {/* Advanced Metrics Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+                <MetricCard 
+                  icon={<ShieldCheck className="text-emerald-500" />} 
+                  label="Fans" 
+                  value={results.followersCount} 
+                  subLabel="Seguidores totales"
+                />
+                <MetricCard 
+                  icon={<UserMinus className="text-red-500" />} 
+                  label="Tóxicos" 
+                  value={results.notFollowingBack.length} 
+                  subLabel="No te siguen de vuelta"
+                  highlight
+                />
+                <div className="glass p-8 rounded-3xl border-white/5 flex flex-col items-center justify-center text-center relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-toxic/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <p className="text-xs text-stone-400 uppercase font-black tracking-tighter mb-2">Toxic Score</p>
+                  <div className="text-4xl font-black text-toxic mb-1">{results.toxicScore}%</div>
+                  <div className="w-full bg-white/5 h-1.5 rounded-full mt-2 overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }} 
+                      animate={{ width: `${results.toxicScore}%` }} 
+                      className="h-full bg-toxic"
+                    />
                   </div>
                 </div>
+                <MetricCard 
+                  icon={<Zap className="text-amber-500" />} 
+                  label="Mutuidad" 
+                  value={`${results.mutualityRate}%`} 
+                  subLabel="Conexiones reales"
+                />
+              </div>
 
-                <div className="glass p-8 rounded-3xl border-white/10 max-h-[600px] flex flex-col">
-                  <h3 className="text-lg font-bold mb-6 text-stone-300 flex items-center justify-between">
-                    <span>Traidores (No te siguen de vuelta)</span>
-                    <span className="bg-toxic/20 text-toxic px-3 py-1 rounded-full text-xs">{results.notFollowingBack.length}</span>
-                  </h3>
-                  <div className="overflow-y-auto pr-4 space-y-3 custom-scrollbar flex-1">
-                    {results.notFollowingBack.map((username, i) => (
-                      <div key={i} className="bg-white/5 p-4 rounded-xl flex items-center justify-between group hover:bg-white/10 transition-all border border-transparent hover:border-white/10">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-stone-800 flex items-center justify-center text-xs font-black border border-white/5">
-                            {username.charAt(0).toUpperCase()}
-                          </div>
-                          <span className="font-semibold text-sm">@{username}</span>
-                        </div>
-                        <a href={`https://instagram.com/${username}`} target="_blank" rel="noreferrer" className="p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <ArrowRight className="w-4 h-4 text-stone-500" />
-                        </a>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-6">
+                  <UserList 
+                    title="Traidores (No te siguen de vuelta)" 
+                    users={results.notFollowingBack} 
+                    count={results.notFollowingBack.length}
+                    variant="danger"
+                  />
+                </div>
+                <div className="space-y-6">
+                  <UserList 
+                    title="Fans Leales" 
+                    users={results.fans} 
+                    count={results.fans.length}
+                    variant="success"
+                  />
+                  {results.lostFollowers.length > 0 && (
+                    <div className="glass p-6 rounded-3xl border-red-500/20 bg-red-500/5">
+                      <div className="flex items-center gap-3 mb-4 text-red-500">
+                        <AlertCircle className="w-5 h-5" />
+                        <h3 className="font-bold">¡Alerta Drama!</h3>
                       </div>
-                    ))}
-                  </div>
+                      <p className="text-sm text-stone-400 mb-4">
+                        Estas {results.lostFollowers.length} personas te dieron unfollow recientemente:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {results.lostFollowers.slice(0, 5).map(u => (
+                          <span key={u} className="px-3 py-1 bg-red-500/10 rounded-full text-[10px] font-bold">@{u}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>

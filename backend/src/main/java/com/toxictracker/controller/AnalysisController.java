@@ -74,13 +74,7 @@ public class AnalysisController {
 
             if (snapshot.isPresent()) {
                 FollowersSnapshot s = snapshot.get();
-                return ResponseEntity.ok(AnalysisResponse.builder()
-                        .followersCount(s.getFollowers().size())
-                        .followingCount(s.getFollowing().size())
-                        .notFollowingMeBack(new java.util.HashSet<>()) // No podemos calcular esto sin followers/following completos aqui
-                        .iDontFollowBack(new java.util.HashSet<>())
-                        .newUnfollowers(new java.util.HashSet<>())
-                        .build());
+                return ResponseEntity.ok(analysisService.buildResponseFromSnapshot(s));
             }
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
