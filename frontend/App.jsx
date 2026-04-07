@@ -162,7 +162,7 @@ const HowItWorks = () => (
           <Step
             number="1"
             title="Instala la Extensión"
-            description="Descarga nuestra extensión gratuita. Abre chrome://extensions, activa el 'Modo Desarrollador' en la esquina superior derecha, y selecciona 'Cargar Descomprimido' eligiendo la carpeta descargada."
+            description="Consigue ToxicTracker en la Chrome Web Store. Es gratuita y se instala con un solo click. Pronto aparecerá el ícono del corazón roto en tu barra de herramientas."
           />
           <Step
             number="2"
@@ -172,7 +172,7 @@ const HowItWorks = () => (
           <Step
             number="3"
             title="Extrae la verdad en 10 segs"
-            description="Haz clic en el ícono de ToxicTracker (rompecabezas de Chrome) y presiona Extraer. Los cálculos se harán solos y te redirigirá aquí."
+            description="Haz clic en el ícono de ToxicTracker y presiona 'Extraer'. Los cálculos se harán solos y te redirigirá aquí para ver el drama."
           />
         </div>
       </div>
@@ -213,7 +213,7 @@ const Faq = () => {
   const faqs = [
     {
       q: '🤔 ¿Dónde consigo la Extensión de Chrome?',
-      a: 'Pídele al creador de esta página que te envíe la carpeta "extension". Dado que es una herramienta súper rápida y "no-oficial" en los ojos de Meta, se instala manualmente. Una vez tengas la carpeta, vas a la barra de Chrome, escribes "chrome://extensions", activas el "Modo Desarrollador" (arriba a la derecha) y seleccionas "Cargar descomprimida" buscando tu carpeta.'
+      a: '¡Muy pronto en la Chrome Web Store oficial! Estamos en proceso de revisión por parte de Google. Mientras tanto, puedes solicitar el acceso anticipado directamente por nuestro repositorio o enviando un mensaje al creador.'
     },
     {
       q: '🔒 ¿Es seguro usar esta extensión?',
@@ -317,6 +317,27 @@ export default function App() {
           lostFollowers,
           fans: idontFollowBack
         });
+
+        // --- NUEVO: Sincronización con PostgreSQL ---
+        const token = localStorage.getItem('toxic_token');
+        if (token) {
+          fetch('/api/analysis/sync', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              followers: followersUsernames,
+              following: followingUsernames
+            })
+          })
+          .then(res => {
+            if (res.ok) console.log("✅ Datos sincronizados con el servidor PostgreSQL.");
+            else console.error("❌ Error al sincronizar con el servidor.");
+          })
+          .catch(err => console.error("❌ Error de red en sincronización:", err));
+        }
       }
     };
     window.addEventListener('message', handleMessage);
@@ -433,6 +454,28 @@ export default function App() {
               <HeartCrack className="w-10 h-10 text-toxic mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-center mb-2">Acceso Seguro</h2>
               <p className="text-center text-stone-400 text-sm mb-6">Inicia sesión rápidamente sin crear nuevas contraseñas.</p>
+              
+              <div className="bg-toxic/10 border border-toxic/20 rounded-2xl p-4 mb-6">
+                <h4 className="text-xs font-black uppercase text-toxic tracking-widest mb-3 text-center">Beneficios de Miembro</h4>
+                <div className="space-y-3 text-xs text-stone-300">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-toxic" />
+                    <span><b>Historial Cloud:</b> Reportes guardados para siempre.</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-toxic" />
+                    <span><b>Sincronización Total:</b> Accede desde cualquier PC.</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-toxic" />
+                    <span><b>Alertas Pro:</b> Detecta traiciones en segundos.</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-toxic" />
+                    <span><b>Seguridad IP:</b> Registro de accesos para tu tranquilidad.</span>
+                  </div>
+                </div>
+              </div>
               
               <div className="space-y-4">
                 <button 

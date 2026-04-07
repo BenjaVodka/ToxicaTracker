@@ -33,6 +33,8 @@ public class FollowersSnapshot {
     @Column(name = "username")
     private Set<String> following;
 
+    private String ipAddress;
+
     private LocalDateTime createdAt;
 
     @PrePersist

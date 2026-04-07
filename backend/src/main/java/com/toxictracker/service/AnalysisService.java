@@ -47,7 +47,7 @@ public class AnalysisService {
                     usernames.add(node.get("string_list_data").get(0).get("value").asText());
                 }
             } else if (root.has("relationships_following")) {
-                 JsonNode list = root.get("relationships_following");
+                JsonNode list = root.get("relationships_following");
                 for (JsonNode node : list) {
                     usernames.add(node.get("string_list_data").get(0).get("value").asText());
                 }
@@ -59,7 +59,7 @@ public class AnalysisService {
         }
     }
 
-    public AnalysisResponse analyze(AppUser user, Set<String> followers, Set<String> following) {
+    public AnalysisResponse analyze(AppUser user, Set<String> followers, Set<String> following, String ipAddress) {
         // Find users who you follow but don't follow you back
         Set<String> notFollowingMeBack = following.stream()
                 .filter(u -> !followers.contains(u))
@@ -73,7 +73,7 @@ public class AnalysisService {
         // Get last snapshot to detect unfollowers
         List<FollowersSnapshot> snapshots = snapshotRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
         Set<String> newUnfollowers = new HashSet<>();
-        
+
         if (!snapshots.isEmpty()) {
             Set<String> previousFollowers = snapshots.get(0).getFollowers();
             newUnfollowers = previousFollowers.stream()
@@ -86,6 +86,7 @@ public class AnalysisService {
                 .user(user)
                 .followers(followers)
                 .following(following)
+                .ipAddress(ipAddress)
                 .build();
         snapshotRepository.save(snapshot);
 
