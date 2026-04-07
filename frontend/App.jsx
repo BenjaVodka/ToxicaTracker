@@ -20,7 +20,8 @@ import {
   CheckCircle,
   AlertCircle,
   CloudLightning,
-  Sparkles
+  Sparkles,
+  BarChart2
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { auth, googleProvider } from './firebase'
@@ -39,9 +40,24 @@ const Nav = ({ token, handleLogout, onLoginClick }) => (
         <a href="#faq" className="hover:text-white transition-colors">Preguntas</a>
       </div>
       {token ? (
-        <button onClick={handleLogout} className="bg-white/10 hover:bg-red-500/20 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all border border-transparent hover:border-red-500/50 flex items-center gap-2">
-          Cerrar Sesión
-        </button>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => {
+              if (window.resultsLoaded) {
+                 document.getElementById('results-section')?.scrollIntoView({behavior: 'smooth'});
+              } else {
+                 // Forces a refresh if not loaded
+                 window.location.reload();
+              }
+            }} 
+            className="hidden md:flex items-center gap-2 text-toxic font-black text-xs uppercase tracking-widest hover:text-white transition-colors"
+          >
+            <BarChart2 className="w-4 h-4" /> Mis Reportes
+          </button>
+          <button onClick={handleLogout} className="bg-white/10 hover:bg-red-500/20 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all border border-transparent hover:border-red-500/50 flex items-center gap-2">
+            Cerrar Sesión
+          </button>
+        </div>
       ) : (
         <button onClick={onLoginClick} className="bg-toxic hover:bg-toxic-dark text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 shadow-lg shadow-toxic/20 hover:shadow-toxic/40">
           Entrar / Registro
@@ -348,6 +364,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+  const [checkingHistory, setCheckingHistory] = useState(false);
   
   // Modificado: Escuchar eventos de la extension
   React.useEffect(() => {
@@ -426,6 +443,7 @@ export default function App() {
   // --- NUEVO: Cargar historial persistente al entrar ---
   React.useEffect(() => {
     if (token) {
+      setCheckingHistory(true);
       fetch(`${API_BASE_URL}/api/analysis/latest`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -446,9 +464,11 @@ export default function App() {
             mutualityRate: data.mutualityRate || 0,
             isFromCloud: true
           });
+          window.resultsLoaded = true;
         }
       })
-      .catch(err => console.error("Error cargando historial:", err));
+      .catch(err => console.error("Error cargando historial:", err))
+      .finally(() => setCheckingHistory(false));
     }
   }, [token]);
 
@@ -544,6 +564,21 @@ export default function App() {
     <div className="min-h-screen">
       <Nav token={token} handleLogout={handleLogout} onLoginClick={() => setShowAuth(true)} />
       
+      {checkingHistory && (
+        <div className="fixed inset-0 z-[60] bg-dark-950/80 backdrop-blur-xl flex flex-col items-center justify-center gap-6">
+          <div className="relative">
+            <div className="w-24 h-24 rounded-full border-4 border-toxic/20 animate-pulse" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <CloudLightning className="w-10 h-10 text-toxic animate-bounce" />
+            </div>
+          </div>
+          <div className="text-center">
+             <h3 className="text-xl font-black text-white mb-2">Recuperando tu chisme...</h3>
+             <p className="text-stone-400 text-sm animate-pulse">Sincronizando con la base de datos segura ☁️</p>
+          </div>
+        </div>
+      )}
+
       <AnimatePresence>
         {showAuth && (
           <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
