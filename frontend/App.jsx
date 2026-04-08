@@ -456,8 +456,8 @@ export default function App() {
       const timeoutId = setTimeout(() => {
         controller.abort();
         setCheckingHistory(false);
-        setError("El servidor de la nube tarda demasiado en responder. Revisa si Render está activo. ⏱️");
-      }, 12000);
+        setError("El servidor de la nube está despertando (Render cold start). Por favor, refresca la página en 30 segundos. ⏱️");
+      }, 50000);
 
       fetch(`${API_BASE_URL}/api/analysis/latest`, {
         headers: { 'Authorization': `Bearer ${token}` },
