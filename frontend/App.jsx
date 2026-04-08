@@ -54,14 +54,14 @@ const ShareOption = ({ icon, label, onClick, disabled = false, highlight = false
 
 const ShareCard = ({ results }) => {
   const score = results.toxicScore;
-  const rawHandle = results.username || auth.currentUser?.displayName || auth.currentUser?.email || 'usuario';
+  const rawHandle = results.username || 'usuario';
   const viewerHandle = String(rawHandle)
     .trim()
     .replace(/^@/, '')
     .split('@')[0]
     .replace(/\s+/g, '') || 'usuario';
-  const viewerName = String(results.fullName || auth.currentUser?.displayName || '').trim();
-  const viewerPhotoUrl = results.profilePhotoUrl || auth.currentUser?.photoURL || '';
+  const viewerName = String(results.fullName || '').trim();
+  const viewerPhotoUrl = results.profilePhotoUrl || '';
   
   const getTheme = (s) => {
     if (s >= 70) return { 
@@ -226,7 +226,7 @@ const ShareDialog = ({ results, onClose }) => {
       });
       
       const link = document.createElement('a');
-      const rawDownloadOwner = results.username || auth.currentUser?.displayName || auth.currentUser?.email || 'usuario';
+      const rawDownloadOwner = results.username || 'usuario';
       const safeDownloadOwner = String(rawDownloadOwner)
         .trim()
         .replace(/^@/, '')
@@ -494,9 +494,10 @@ const UserAvatar = ({ name, imageUrl = '', size = "w-12 h-12" }) => {
   );
 };
 
-const UserList = ({ title = "", users = [], count = 0, variantSet = "success", turboMode = false, setTurboMode = null, onUnfollow = null }) => {
+const UserList = ({ title = "", users = [], count = 0, variantSet = "success", turboMode = false, setTurboMode = null, onUnfollow = null, userPhotoMap = {} }) => {
   const [search, setSearch] = useState("");
-  const filtered = users.filter(u => u.toLowerCase().includes(search.toLowerCase()));
+  const normalizedUsers = normalizeUsernames(users);
+  const filtered = normalizedUsers.filter((u) => u.toLowerCase().includes(search.toLowerCase()));
 
   const isDanger = variantSet === 'danger';
 
@@ -548,7 +549,7 @@ const UserList = ({ title = "", users = [], count = 0, variantSet = "success", t
           filtered.map(u => (
             <div key={u} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/5 transition-all group/item">
               <div className="flex items-center gap-4">
-                <UserAvatar name={u} />
+                <UserAvatar name={u} imageUrl={userPhotoMap[u] || ''} />
                 <div>
                   <p className="font-bold text-sm text-white transition-colors group-hover/item:text-toxic">@{u}</p>
                   <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
@@ -705,6 +706,7 @@ const STORAGE_KEYS = {
 const MESSAGE_TYPES = {
   sessionUpdate: 'TOXIC_SESSION_UPDATE',
   extensionData: 'TOXIC_EXTENSION_DATA',
+  extensionDataRequest: 'TOXIC_EXTENSION_DATA_REQUEST',
   turboUnfollow: 'TOXIC_TURBO_UNFOLLOW'
 };
 
@@ -727,6 +729,57 @@ const postToSelf = (data) => {
 };
 
 const authHeaders = (token) => (token ? { 'Authorization': `Bearer ${token}` } : undefined);
+
+const normalizeUsername = (value) => String(value || '').trim().replace(/^@/, '');
+
+const nonEmptyString = (value) => (typeof value === 'string' ? value.trim() : '');
+
+const normalizeUsernames = (users = []) => (
+  users
+    .map((user) => normalizeUsername(typeof user === 'string' ? user : user?.username))
+    .filter(Boolean)
+);
+
+const mergeUserPhotoMaps = (...maps) => {
+  const merged = {};
+  maps.forEach((map) => {
+    if (!map || typeof map !== 'object') return;
+    Object.entries(map).forEach(([username, pic]) => {
+      const safeUsername = normalizeUsername(username);
+      const safePic = nonEmptyString(pic);
+      if (safeUsername && safePic) {
+        merged[safeUsername] = safePic;
+      }
+    });
+  });
+  return merged;
+};
+
+const buildUserPhotoMap = (...userLists) => {
+  const map = {};
+  userLists.forEach((list) => {
+    if (!Array.isArray(list)) return;
+    list.forEach((user) => {
+      const username = normalizeUsername(user?.username);
+      const pic = nonEmptyString(user?.pic);
+      if (username && pic) {
+        map[username] = pic;
+      }
+    });
+  });
+  return map;
+};
+
+const mergeIdentity = (previousResults, nextIdentity) => {
+  const previous = previousResults || {};
+  const incoming = nextIdentity || {};
+
+  const username = nonEmptyString(incoming.username) || nonEmptyString(previous.username) || '';
+  const fullName = nonEmptyString(incoming.fullName) || nonEmptyString(previous.fullName) || '';
+  const profilePhotoUrl = nonEmptyString(incoming.profilePhotoUrl) || nonEmptyString(previous.profilePhotoUrl) || '';
+
+  return { username, fullName, profilePhotoUrl };
+};
 
 export default function App() {
   const [files, setFiles] = useState({ followers: null, following: null });
@@ -912,13 +965,14 @@ export default function App() {
         if (!Array.isArray(followers) || !Array.isArray(following)) {
           return;
         }
-        const ownerUsername = typeof owner?.username === 'string' ? owner.username.trim() : '';
-        const ownerFullName = typeof owner?.full_name === 'string' ? owner.full_name.trim() : '';
-        const ownerProfilePhoto = typeof owner?.pic === 'string' ? owner.pic.trim() : '';
+        const ownerUsername = normalizeUsername(owner?.username);
+        const ownerFullName = nonEmptyString(owner?.full_name);
+        const ownerProfilePhoto = nonEmptyString(owner?.pic);
+        const userPhotoMap = buildUserPhotoMap(followers, following);
 
         // Ejecutamos el algoritmo matematico localmente (Cero servidores, 100% privado)
-        const followersUsernames = followers.map(f => f.username);
-        const followingUsernames = following.map(f => f.username);
+        const followersUsernames = normalizeUsernames(followers);
+        const followingUsernames = normalizeUsernames(following);
         const followersSet = new Set(followersUsernames);
         const followingSet = new Set(followingUsernames);
 
@@ -940,18 +994,27 @@ export default function App() {
         const mutualityRate = unionSize === 0 ? 0 : (mutualsCount * 100 / unionSize);
 
         setLoading(false);
-        setResults({
-          message: lostFollowers.length > 0 || notFollowingBack.length > 0 ? "Se prendio esto! Hay drama." : "Todo tranqui por ahora.",
-          username: ownerUsername || auth.currentUser?.displayName || auth.currentUser?.email || 'usuario',
-          fullName: ownerFullName || ownerUsername || auth.currentUser?.displayName || '',
-          profilePhotoUrl: ownerProfilePhoto || auth.currentUser?.photoURL || '',
-          followersCount: followers.length,
-          followingCount: following.length,
-          notFollowingBack,
-          lostFollowers,
-          fans: idontFollowBack,
-          toxicScore: Math.round(toxicScore * 10) / 10,
-          mutualityRate: Math.round(mutualityRate * 10) / 10
+        setResults((prev) => {
+          const identity = mergeIdentity(prev, {
+            username: ownerUsername,
+            fullName: ownerFullName || ownerUsername,
+            profilePhotoUrl: ownerProfilePhoto
+          });
+
+          return {
+            ...(prev || {}),
+            ...identity,
+            message: lostFollowers.length > 0 || notFollowingBack.length > 0 ? "Se prendio esto! Hay drama." : "Todo tranqui por ahora.",
+            followersCount: followers.length,
+            followingCount: following.length,
+            notFollowingBack,
+            lostFollowers,
+            fans: idontFollowBack,
+            toxicScore: Math.round(toxicScore * 10) / 10,
+            mutualityRate: Math.round(mutualityRate * 10) / 10,
+            isFromCloud: false,
+            userPhotoMap: mergeUserPhotoMaps(prev?.userPhotoMap, userPhotoMap)
+          };
         });
 
         // --- NUEVO: SincronizaciÃ³n con PostgreSQL ---
@@ -983,7 +1046,19 @@ export default function App() {
       }
     };
     window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    const requestExtensionData = () => {
+      postToSelf({ type: MESSAGE_TYPES.extensionDataRequest });
+    };
+
+    requestExtensionData();
+    const retryA = window.setTimeout(requestExtensionData, 800);
+    const retryB = window.setTimeout(requestExtensionData, 2000);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      window.clearTimeout(retryA);
+      window.clearTimeout(retryB);
+    };
   }, []);
 
   const [token, setToken] = useState(null);
@@ -1036,17 +1111,20 @@ export default function App() {
       .then(res => res.status === 200 ? res.json() : null)
       .then(data => {
         if (data) {
-          setResults({
-            message: "Tu Informe Tóxico está listo 🕵️‍♂️🔥",
+          setResults((prev) => ({
+            ...(prev || {}),
+            ...mergeIdentity(prev, {}),
+            message: "Tu informe toxico esta listo.",
             followersCount: data.followersCount,
             followingCount: data.followingCount,
-            notFollowingBack: data.notFollowingMeBack || [], 
-            lostFollowers: data.newUnfollowers || [],
-            fans: data.fans || [],
+            notFollowingBack: normalizeUsernames(data.notFollowingMeBack || []),
+            lostFollowers: normalizeUsernames(data.newUnfollowers || []),
+            fans: normalizeUsernames(data.fans || []),
             toxicScore: data.toxicScore || 0,
             mutualityRate: data.mutualityRate || 0,
-            isFromCloud: true
-          });
+            isFromCloud: true,
+            userPhotoMap: prev?.userPhotoMap || {}
+          }));
         }
       })
       .catch(() => {});
@@ -1102,17 +1180,20 @@ export default function App() {
         .then(res => res.status === 200 ? res.json() : null)
         .then(data => {
           if (data) {
-            setResults({
-              message: "¡Datos detectados! Sincronizando... 🚀",
+            setResults((prev) => ({
+              ...(prev || {}),
+              ...mergeIdentity(prev, {}),
+              message: "Datos detectados! Sincronizando...",
               followersCount: data.followersCount,
               followingCount: data.followingCount,
-              notFollowingBack: data.notFollowingMeBack || [], 
-              lostFollowers: data.newUnfollowers || [],
-              fans: data.fans || [],
+              notFollowingBack: normalizeUsernames(data.notFollowingMeBack || []),
+              lostFollowers: normalizeUsernames(data.newUnfollowers || []),
+              fans: normalizeUsernames(data.fans || []),
               toxicScore: data.toxicScore || 0,
               mutualityRate: data.mutualityRate || 0,
-              isFromCloud: true
-            });
+              isFromCloud: true,
+              userPhotoMap: prev?.userPhotoMap || {}
+            }));
           }
         })
         .catch(() => {});
@@ -1193,16 +1274,19 @@ export default function App() {
 
       const data = await response.json();
 
-      setResults({
-        message: data.newUnfollowers.length > 0 ? "¡Se prendió esto! Hay drama. 🔥" : "¡Todo tranqui por ahora! ✨",
+      setResults((prev) => ({
+        ...(prev || {}),
+        ...mergeIdentity(prev, {}),
+        message: data.newUnfollowers.length > 0 ? "Se prendio esto! Hay drama." : "Todo tranqui por ahora!",
         followersCount: data.followersCount,
         followingCount: data.followingCount,
-        notFollowingBack: data.notFollowingMeBack || [],
-        lostFollowers: data.newUnfollowers || [],
-        fans: data.fans || [],
+        notFollowingBack: normalizeUsernames(data.notFollowingMeBack || []),
+        lostFollowers: normalizeUsernames(data.newUnfollowers || []),
+        fans: normalizeUsernames(data.fans || []),
         toxicScore: data.toxicScore || 0,
-        mutualityRate: data.mutualityRate || 0
-      });
+        mutualityRate: data.mutualityRate || 0,
+        userPhotoMap: prev?.userPhotoMap || {}
+      }));
 
     } catch (err) {
       setError(err.message);
@@ -1497,6 +1581,7 @@ export default function App() {
                     turboMode={turboMode}
                     setTurboMode={setTurboMode}
                     onUnfollow={handleUnfollowAction}
+                    userPhotoMap={results.userPhotoMap || {}}
                   />
                 </div>
                 <div className="lg:col-span-4 order-3 lg:order-2">
@@ -1506,6 +1591,7 @@ export default function App() {
                     count={results.fans.length} 
                     variantSet="success" 
                     onUnfollow={handleUnfollowAction}
+                    userPhotoMap={results.userPhotoMap || {}}
                   />
                 </div>
                 <div className="lg:col-span-4 space-y-6 md:space-y-8 order-1 lg:order-3">

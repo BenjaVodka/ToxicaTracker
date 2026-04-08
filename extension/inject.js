@@ -3,20 +3,32 @@ const ALLOWED_ORIGINS = new Set([
     "https://toxicatracker.vercel.app"
 ]);
 
+const MESSAGE_TYPES = {
+    extensionData: "TOXIC_EXTENSION_DATA",
+    extensionDataRequest: "TOXIC_EXTENSION_DATA_REQUEST",
+    sessionUpdate: "TOXIC_SESSION_UPDATE",
+    turboUnfollow: "TOXIC_TURBO_UNFOLLOW"
+};
+
 const isTrustedOrigin = ALLOWED_ORIGINS.has(window.location.origin);
 if (!isTrustedOrigin) {
     console.warn("ToxicTracker inject.js blocked on non-trusted origin:", window.location.origin);
 } else {
-    // Pass data to web app
-    chrome.storage.local.get(["toxicData"], (result) => {
-        if (result.toxicData) {
+    const postExtensionData = (removeAfterSend = false) => {
+        chrome.storage.local.get(["toxicData"], (result) => {
+            if (!result.toxicData) return;
             window.postMessage(
-                { type: "TOXIC_EXTENSION_DATA", payload: result.toxicData },
+                { type: MESSAGE_TYPES.extensionData, payload: result.toxicData },
                 window.location.origin
             );
-            chrome.storage.local.remove("toxicData");
-        }
-    });
+            if (removeAfterSend) {
+                chrome.storage.local.remove("toxicData");
+            }
+        });
+    };
+
+    // Intento inicial (si la app ya está lista lo recibe al tiro)
+    postExtensionData(false);
 
     // Capture and Sync Session
     const syncSession = () => {
@@ -42,8 +54,13 @@ if (!isTrustedOrigin) {
             return;
         }
 
+        if (data.type === MESSAGE_TYPES.extensionDataRequest) {
+            postExtensionData(true);
+            return;
+        }
+
         // Session Updates
-        if (data.type === "TOXIC_SESSION_UPDATE") {
+        if (data.type === MESSAGE_TYPES.sessionUpdate) {
             if (typeof data.token === "string" && data.token.length > 0) {
                 chrome.storage.local.set({ toxic_session: data.token, toxic_token: data.token });
             } else {
@@ -53,7 +70,7 @@ if (!isTrustedOrigin) {
         }
 
         // Unfollow commands
-        if (data.type === "TOXIC_TURBO_UNFOLLOW" && typeof data.username === "string" && data.username.trim()) {
+        if (data.type === MESSAGE_TYPES.turboUnfollow && typeof data.username === "string" && data.username.trim()) {
             chrome.runtime.sendMessage({
                 type: "REQUEST_UNFOLLOW",
                 username: data.username.trim()

@@ -75,7 +75,12 @@ async function scrapeInstagram() {
 
         const userId = cookies.ds_user_id || '';
         const cookieUsernameRaw = cookies.ds_user || '';
-        const cookieUsername = decodeURIComponent(cookieUsernameRaw).trim();
+        let cookieUsername = '';
+        try {
+            cookieUsername = decodeURIComponent(cookieUsernameRaw).trim();
+        } catch (_) {
+            cookieUsername = cookieUsernameRaw.trim();
+        }
 
         if (!userId) {
             return { error: 'No se encontro sesion. Inicia sesion en Instagram desde el navegador.' };
