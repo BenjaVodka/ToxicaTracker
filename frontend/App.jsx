@@ -284,8 +284,8 @@ const UserList = ({ title = "", users = [], count = 0, variantSet = "success", t
                 <div>
                   <p className="font-bold text-sm text-white transition-colors group-hover/item:text-toxic">@{u}</p>
                   <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
-                    <span className={`w-1.5 h-1.5 rounded-full ${isDanger ? 'bg-red-500' : 'bg-emerald-500'}`} />
-                    {isDanger ? 'Sin retorno' : 'Mutuo'}
+                    <span className={`w-1.5 h-1.5 rounded-full ${isDanger ? 'bg-red-500' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`} />
+                    {isDanger ? 'TE IGNORA' : 'ES LEAL'}
                   </p>
                 </div>
               </div>
@@ -1295,9 +1295,9 @@ export default function App() {
                 />
               </div>
 
-              {/* Lists and Feed Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                <div className="lg:col-span-4">
+              {/* Lists and Feed Grid - Optimized for Mobile First Ordering */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
+                <div className="lg:col-span-4 order-2 lg:order-1">
                   <UserList 
                     title="Traidores (No te siguen de vuelta)" 
                     users={results.notFollowingBack} 
@@ -1308,7 +1308,7 @@ export default function App() {
                     onUnfollow={handleUnfollowAction}
                   />
                 </div>
-                <div className="lg:col-span-4">
+                <div className="lg:col-span-4 order-3 lg:order-2">
                   <UserList 
                     title="Fans Leales" 
                     users={results.fans} 
@@ -1317,7 +1317,7 @@ export default function App() {
                     onUnfollow={handleUnfollowAction}
                   />
                 </div>
-                <div className="lg:col-span-4 space-y-8">
+                <div className="lg:col-span-4 space-y-6 md:space-y-8 order-1 lg:order-3">
                   {/* AI Analyst Block (Moved to sidebar) */}
                   {(() => {
                     const diag = getToxicityDiagnosis(results);
