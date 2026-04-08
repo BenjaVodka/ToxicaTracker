@@ -55,7 +55,6 @@ const ShareOption = ({ icon, label, onClick, disabled = false, highlight = false
 const ShareCard = ({ results }) => {
   const score = results.toxicScore;
   
-  // Motor de Temas Dinámicos ✨
   const getTheme = (s) => {
     if (s >= 70) return { 
       primary: "text-red-500", 
@@ -83,10 +82,9 @@ const ShareCard = ({ results }) => {
   const theme = getTheme(score);
 
   const getToxicityDiagnosis = (res) => {
-    if (!res) return { text: "No hay datos", emoji: "❓", color: "text-stone-500", bg: "bg-stone-500/10", border: "border-stone-500/20" };
+    if (!res) return { text: "No hay datos", emoji: "❓", color: "text-stone-500" };
     const country = (res.country || 'global').toLowerCase();
     
-    // Diccionario de Sarcasmo Localizado 🌎
     const localizedQuotes = {
       chile: {
         ultra: "Tu cuenta es terrible penca po. Está llena de weones fomes que no te siguen. 🚩",
@@ -121,77 +119,75 @@ const ShareCard = ({ results }) => {
   return (
     <div 
       id="toxic-share-card"
-      className="w-[1080px] h-[1920px] bg-stone-950 flex flex-col relative overflow-hidden"
+      className="w-[360px] h-[640px] bg-stone-950 flex flex-col relative overflow-hidden"
     >
-      {/* Mesh Gradient Animado (Solo en el render de imagen se queda estático) */}
       <div className={`absolute inset-0 bg-gradient-to-br ${theme.mesh} opacity-80`} />
-      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-white/5 blur-[250px] rounded-full" />
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-toxic/10 blur-[200px] rounded-full" />
+      <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-white/5 blur-[100px] rounded-full" />
       
       {/* Header Container */}
-      <div className="relative z-10 px-20 pt-24 mb-32">
-        <div className="flex items-center gap-6 mb-4">
-          <div className={`p-4 rounded-3xl bg-gradient-to-tr ${theme.accent} shadow-2xl`}>
-             <Zap className="w-16 h-16 text-stone-950 fill-current" />
+      <div className="relative z-10 px-8 pt-10 mb-8">
+        <div className="flex items-center gap-2 mb-1">
+          <div className={`p-1.5 rounded-lg bg-gradient-to-tr ${theme.accent} shadow-lg`}>
+             <Zap className="w-5 h-5 text-stone-950 fill-current" />
           </div>
           <div>
-            <h1 className="text-8xl font-black italic tracking-tighter text-white">TOXIC TRACKER</h1>
-            <p className="text-2xl font-black text-stone-400 uppercase tracking-[0.4em] mt-2">Personal Social Audit</p>
+            <h1 className="text-xl font-black italic tracking-tighter text-white">TOXIC TRACKER</h1>
+            <p className="text-[7px] font-black text-stone-400 uppercase tracking-[0.4em]">Personal Social Audit</p>
           </div>
         </div>
       </div>
 
       {/* Profile Section */}
-      <div className="relative z-10 flex flex-col items-center mb-32 px-20">
-        <div className="relative p-2 rounded-[4rem] bg-gradient-to-tr transition-all" style={{ backgroundImage: `linear-gradient(to top right, transparent, rgba(255,255,255,0.1))` }}>
-           <UserAvatar name={results.username} size="w-64 h-64" />
-           <div className={`absolute -bottom-4 -right-4 p-5 rounded-3xl bg-gradient-to-tr ${theme.accent} shadow-xl border-8 border-stone-900`}>
-              <CheckCircle2 className="w-10 h-10 text-stone-950" />
+      <div className="relative z-10 flex flex-col items-center mb-8 px-8">
+        <div className="relative p-0.5 rounded-[1.5rem] bg-gradient-to-tr transition-all" style={{ backgroundImage: `linear-gradient(to top right, transparent, rgba(255,255,255,0.1))` }}>
+           <UserAvatar name={results.username} size="w-20 h-20" />
+           <div className={`absolute -bottom-1 -right-1 p-1.5 rounded-lg bg-gradient-to-tr ${theme.accent} shadow-xl border-2 border-stone-900`}>
+              <CheckCircle2 className="w-3 h-3 text-stone-950" />
            </div>
         </div>
-        <h2 className="text-9xl font-black text-white mt-12 italic tracking-tighter">@{results.username}</h2>
-        <div className={`mt-8 px-12 py-3 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white text-3xl font-black uppercase tracking-[0.2em]`}>
+        <h2 className="text-3xl font-black text-white mt-4 italic tracking-tighter">@{results.username}</h2>
+        <div className={`mt-2 px-4 py-1 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white text-[8px] font-black uppercase tracking-[0.2em]`}>
            Informe de Salud Social 🔒
         </div>
       </div>
 
       {/* Metrics Section */}
-      <div className="relative z-10 grid grid-cols-2 gap-12 px-20 mb-32">
-        <div className="glass-premium p-16 rounded-[4rem] border-white/10 bg-white/[0.03] backdrop-blur-3xl">
-          <p className="text-3xl font-black text-stone-400 uppercase tracking-widest mb-4">Toxic Score</p>
-          <div className="flex items-end gap-2">
-            <span className={`text-[12rem] leading-none font-black ${theme.primary} tracking-tight`}>{results.toxicScore}</span>
-            <span className={`text-6xl font-black ${theme.primary} mb-12`}>%</span>
+      <div className="relative z-10 grid grid-cols-2 gap-4 px-8 mb-8">
+        <div className="glass-premium p-5 rounded-3xl border-white/5 bg-white/[0.03] backdrop-blur-3xl">
+          <p className="text-[8px] font-black text-stone-400 uppercase tracking-widest mb-1.5">Toxic Score</p>
+          <div className="flex items-end gap-1">
+            <span className={`text-5xl leading-none font-black ${theme.primary} tracking-tight`}>{results.toxicScore}</span>
+            <span className={`text-[12px] font-black ${theme.primary} mb-1`}>%</span>
           </div>
         </div>
-        <div className="glass-premium p-16 rounded-[4rem] border-white/10 bg-white/[0.03] backdrop-blur-3xl">
-          <p className="text-3xl font-black text-stone-400 uppercase tracking-widest mb-4">Traidores</p>
-          <div className="flex items-end gap-2">
-            <span className="text-[12rem] leading-none font-black text-white tracking-tight">{results.notFollowingBack.length}</span>
-            <UserMinus className="w-20 h-20 text-stone-500 mb-12" />
+        <div className="glass-premium p-5 rounded-3xl border-white/5 bg-white/[0.03] backdrop-blur-3xl">
+          <p className="text-[8px] font-black text-stone-400 uppercase tracking-widest mb-1.5">Traidores</p>
+          <div className="flex items-end gap-1">
+            <span className="text-5xl leading-none font-black text-white tracking-tight">{results.notFollowingBack.length}</span>
+            <UserMinus className="w-6 h-6 text-stone-500 mb-1" />
           </div>
         </div>
       </div>
 
       {/* Diagnosis Section */}
-      <div className="relative z-10 px-20 mt-auto pb-40">
-        <div className={`p-20 rounded-[5rem] border ${theme.border} bg-white/[0.02] backdrop-blur-3xl relative overflow-hidden group shadow-2xl`}>
-          <div className="absolute top-0 right-0 p-12 opacity-[0.03]">
-             <span className="text-[20rem] leading-none">{diag.emoji}</span>
+      <div className="relative z-10 px-8 mt-auto pb-12">
+        <div className={`p-6 rounded-[2rem] border ${theme.border} bg-white/[0.02] backdrop-blur-3xl relative overflow-hidden group shadow-2xl`}>
+          <div className="absolute top-0 right-0 p-4 opacity-[0.05]">
+             <span className="text-7xl leading-none">{diag.emoji}</span>
           </div>
           <div className="relative z-10">
-            <div className="flex items-center gap-6 mb-8">
-               <div className={`w-12 h-1 bg-gradient-to-r ${theme.accent} rounded-full`} />
-               <span className="text-3xl font-black uppercase tracking-[0.3em] text-stone-500">Diagnóstico IA</span>
+            <div className="flex items-center gap-2 mb-3">
+               <div className={`w-6 h-0.5 bg-gradient-to-r ${theme.accent} rounded-full`} />
+               <span className="text-[9px] font-black uppercase tracking-[0.2em] text-stone-500">Diagnóstico IA</span>
             </div>
-            <p className="text-7xl font-bold text-white leading-[1.3] italic">
+            <p className="text-xl font-bold text-white leading-[1.3] italic">
                "{diag.text}"
             </p>
           </div>
         </div>
         
-        <div className="mt-20 text-center">
-           <p className="text-3xl font-bold text-stone-500 tracking-widest uppercase opacity-40">ToxicTracker.app • Sin contraseñas</p>
+        <div className="mt-6 text-center">
+           <p className="text-[8px] font-bold text-stone-500 tracking-widest uppercase opacity-40">ToxicTracker.app • Sin contraseñas</p>
         </div>
       </div>
     </div>
@@ -238,29 +234,32 @@ const ShareDialog = ({ results, onClose }) => {
       <motion.div initial={{ y: 200, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 200, opacity: 0 }} className="relative w-full max-w-sm bg-stone-900 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl">
         <div className="p-8">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-black text-white italic tracking-tighter">COMPARTIR</h3>
+            <h3 className="text-xl font-black text-white italic tracking-tighter uppercase">Compartir</h3>
             <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors text-stone-500"><X className="w-5 h-5" /></button>
           </div>
           
           <div className="flex justify-center mb-8">
-            <ShareOption 
-              icon={<Download />} 
-              label={sharing ? "Generando..." : "Descargar Imagen"} 
-              onClick={handleDownload} 
-              highlight={true} 
-              disabled={sharing}
-            />
+            <div className="w-full max-w-[280px] aspect-[9/16] bg-stone-950 rounded-2xl border border-white/5 overflow-hidden relative shadow-inner">
+              <div className="scale-[0.24] sm:scale-[0.3] origin-top absolute top-0 left-1/2 -translate-x-1/2">
+                 <ShareCard results={results} />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-transparent" />
+            </div>
           </div>
 
-          {status && (
-            <div className="text-center py-2 bg-toxic/10 rounded-xl mb-4 text-[10px] font-black text-toxic uppercase tracking-widest animate-pulse">{status}</div>
-          )}
-
-          <div className="w-full aspect-[9/16] bg-stone-950 rounded-2xl border border-white/5 overflow-hidden relative shadow-inner">
-            <div className="scale-[0.24] sm:scale-[0.3] origin-top absolute top-0 left-1/2 -translate-x-1/2">
-               <ShareCard results={results} />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-transparent" />
+          <div className="space-y-4">
+            {status && (
+              <div className="text-center py-2 bg-toxic/10 rounded-xl text-[10px] font-black text-toxic uppercase tracking-widest animate-pulse">{status}</div>
+            )}
+            
+            <button 
+              onClick={handleDownload}
+              disabled={sharing}
+              className="w-full py-5 rounded-2xl bg-toxic text-stone-950 font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-[0_20px_40px_rgba(74,222,128,0.2)]"
+            >
+              {sharing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+              {sharing ? "Generando..." : "Descargar Imagen"}
+            </button>
           </div>
         </div>
       </motion.div>
