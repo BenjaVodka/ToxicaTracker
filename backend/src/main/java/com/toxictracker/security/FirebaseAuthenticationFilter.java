@@ -33,7 +33,7 @@ public class FirebaseAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         log.info("Petición recibida: {} {} - Header: {}", request.getMethod(), request.getRequestURI(), (authHeader != null) ? "Presente" : "Ausente");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        if (authHeader != null && authHeader.toLowerCase().startsWith("bearer ")) {
             String idToken = authHeader.substring(7);
             try {
                 FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
