@@ -657,7 +657,9 @@ const Footer = () => (
   </footer>
 )
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '')
+  .replace(/\/+$/, '')
+  .replace(/\/api$/, '');
 
 export default function App() {
   const [files, setFiles] = useState({ followers: null, following: null });
@@ -676,7 +678,7 @@ export default function App() {
     const igPath = `https://www.instagram.com/${username}/`;
     if (turboMode) {
       // Send command to extension
-      window.postMessage({ type: 'TOXIC_TURBO_UNFOLLOW', username }, '*');
+      window.postMessage({ type: 'TOXIC_TURBO_UNFOLLOW', username }, window.location.origin);
     } else {
       // Normal behavior: Open profile
       window.open(igPath, '_blank');
@@ -830,33 +832,46 @@ export default function App() {
   // Modificado: Escuchar eventos de la extension
   React.useEffect(() => {
     const handleMessage = (event) => {
+      if (event.source !== window || event.origin !== window.location.origin) {
+        return;
+      }
+      if (!event.data || typeof event.data !== 'object') {
+        return;
+      }
+
       // Verificamos que el mensaje provenga de nuestra propia ventana/extension
-      if (event.data && event.data.type === 'TOXIC_EXTENSION_DATA') {
-        const { followers, following } = event.data.payload;
-        
+      if (event.data.type === 'TOXIC_EXTENSION_DATA') {
+        const { followers, following } = event.data.payload || {};
+        if (!Array.isArray(followers) || !Array.isArray(following)) {
+          return;
+        }
+
         // Ejecutamos el algoritmo matematico localmente (Cero servidores, 100% privado)
         const followersUsernames = followers.map(f => f.username);
         const followingUsernames = following.map(f => f.username);
+        const followersSet = new Set(followersUsernames);
+        const followingSet = new Set(followingUsernames);
 
-        const notFollowingBack = followingUsernames.filter(u => !followersUsernames.includes(u));
-        const idontFollowBack = followersUsernames.filter(u => !followingUsernames.includes(u));
+        const notFollowingBack = followingUsernames.filter(u => !followersSet.has(u));
+        const idontFollowBack = followersUsernames.filter(u => !followingSet.has(u));
 
         // Para calcular unfollowers (traicioneros en el tiempo), leemos localStorage
-        const previousFollowers = JSON.parse(localStorage.getItem('toxic_last_followers') || '[]');
-        const lostFollowers = previousFollowers.filter(u => !followersUsernames.includes(u));
+        const previousFollowersRaw = JSON.parse(localStorage.getItem('toxic_last_followers') || '[]');
+        const previousFollowers = Array.isArray(previousFollowersRaw) ? previousFollowersRaw : [];
+        const lostFollowers = previousFollowers.filter(u => !followersSet.has(u));
 
         // Guardamos el estado actual para la proxima vez
         localStorage.setItem('toxic_last_followers', JSON.stringify(followersUsernames));
 
-        // Calculo de métricas adicionales locales
-        const mutualsCount = followingUsernames.filter(u => followersUsernames.includes(u)).length;
+        // Calculo de metricas adicionales locales
+        const mutualsCount = followingUsernames.filter(u => followersSet.has(u)).length;
         const toxicScore = followingUsernames.length === 0 ? 0 : (notFollowingBack.length * 100 / followingUsernames.length);
         const unionSize = followersUsernames.length + followingUsernames.length - mutualsCount;
         const mutualityRate = unionSize === 0 ? 0 : (mutualsCount * 100 / unionSize);
 
         setLoading(false);
         setResults({
-          message: lostFollowers.length > 0 || notFollowingBack.length > 0 ? "¡Se prendió esto! Hay drama. 🔥" : "¡Todo tranqui por ahora! ✨",
+          message: lostFollowers.length > 0 || notFollowingBack.length > 0 ? "Se prendio esto! Hay drama." : "Todo tranqui por ahora.",
           followersCount: followers.length,
           followingCount: following.length,
           notFollowingBack,
@@ -866,8 +881,8 @@ export default function App() {
           mutualityRate: Math.round(mutualityRate * 10) / 10
         });
 
-        // --- NUEVO: Sincronización con PostgreSQL ---
-        const token = localStorage.getItem('toxic_token');
+        // --- NUEVO: SincronizaciÃ³n con PostgreSQL ---
+        const token = localStorage.getItem('toxic_token') || localStorage.getItem('toxic_session');
         if (token) {
           fetch(`${API_BASE_URL}/api/analysis/sync`, {
             method: 'POST',
@@ -881,15 +896,15 @@ export default function App() {
             })
           })
           .then(res => {
-            if (res.ok) console.log("✅ Datos sincronizados con el servidor PostgreSQL.");
+            if (res.ok) console.log("Datos sincronizados con el servidor PostgreSQL.");
             else {
-              console.error("❌ Error al sincronizar con el servidor.");
-              // Opcional: Avisar al usuario que su chisme no se guardó en la nube
+              console.error("Error al sincronizar con el servidor.");
+              // Opcional: Avisar al usuario que su chisme no se guardÃ³ en la nube
             }
           })
           .catch(err => {
-            console.error("❌ Error de red en sincronización:", err);
-            // Si el sync falla pero el local funcionó, no bloqueamos al usuario
+            console.error("Error de red en sincronizacion:", err);
+            // Si el sync falla pero el local funcionÃ³, no bloqueamos al usuario
           });
         }
       }
@@ -909,9 +924,10 @@ export default function App() {
         try {
           const jwtToken = await user.getIdToken(true); 
           setToken(jwtToken);
+          localStorage.setItem('toxic_token', jwtToken);
           localStorage.setItem('toxic_session', jwtToken);
           // Notificamos a la extensión en tiempo real
-          window.postMessage({ type: 'TOXIC_SESSION_UPDATE', token: jwtToken }, '*');
+          window.postMessage({ type: 'TOXIC_SESSION_UPDATE', token: jwtToken }, window.location.origin);
           setLoading(false);
         } catch (err) {
           console.error("Error renovando token:", err);
@@ -919,8 +935,9 @@ export default function App() {
         }
       } else {
         setToken(null);
+        localStorage.removeItem('toxic_token');
         localStorage.removeItem('toxic_session');
-        window.postMessage({ type: 'TOXIC_SESSION_UPDATE', token: null }, '*');
+        window.postMessage({ type: 'TOXIC_SESSION_UPDATE', token: null }, window.location.origin);
       }
     });
 
@@ -983,7 +1000,7 @@ export default function App() {
   // Periodic Global Activity Fetch
   React.useEffect(() => {
     const fetchActivity = () => {
-      fetch(`${API_BASE_URL}/api/activity/latest`)
+      fetch(`${API_BASE_URL}/api/activity/latest`, token ? { headers: { 'Authorization': `Bearer ${token}` } } : undefined)
         .then(res => res.json())
         .then(data => setGlobalActivity(data))
         .catch(() => {});
@@ -991,14 +1008,17 @@ export default function App() {
     fetchActivity();
     const interval = setInterval(fetchActivity, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [token]);
 
   // Log Share Events
   React.useEffect(() => {
     if (showShareDialog) {
-      fetch(`${API_BASE_URL}/api/activity/log-share`, { method: 'POST' }).catch(() => {});
+      fetch(`${API_BASE_URL}/api/activity/log-share`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : undefined
+      }).catch(() => {});
     }
-  }, [showShareDialog]);
+  }, [showShareDialog, token]);
 
   // --- NUEVO: Polling para detectar cuando la extensión sube datos ---
   React.useEffect(() => {
@@ -1038,6 +1058,8 @@ export default function App() {
       const jwtToken = await result.user.getIdToken();
       setToken(jwtToken);
       localStorage.setItem('toxic_token', jwtToken);
+      localStorage.setItem('toxic_session', jwtToken);
+      window.postMessage({ type: 'TOXIC_SESSION_UPDATE', token: jwtToken }, window.location.origin);
       setShowAuth(false);
       // results se cargará solo por el useEffect de arriba
     } catch (err) {
@@ -1052,6 +1074,8 @@ export default function App() {
     await signOut(auth);
     setToken(null);
     localStorage.removeItem('toxic_token');
+    localStorage.removeItem('toxic_session');
+    window.postMessage({ type: 'TOXIC_SESSION_UPDATE', token: null }, window.location.origin);
     setResults(null);
   };
 
