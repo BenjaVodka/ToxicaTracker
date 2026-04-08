@@ -129,12 +129,11 @@ const ShareCard = ({ results }) => {
 
 const ShareDialog = ({ results, onClose }) => {
   const [sharing, setSharing] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [showStatus, setShowStatus] = useState("");
+  const [status, setStatus] = useState("");
 
   const handleDownload = async () => {
     setSharing(true);
-    setShowStatus("Generando tarjeta...");
+    setStatus("Generando tarjeta...");
     try {
       const element = document.querySelector("#toxic-share-card-capture");
       if (!element) throw new Error("Element not found");
@@ -143,24 +142,12 @@ const ShareDialog = ({ results, onClose }) => {
       link.download = `toxic-tracker-${results.username}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
-      setShowStatus("¡Guardado!");
-      setTimeout(() => setShowStatus(""), 2000);
+      setStatus("¡Guardado!");
+      setTimeout(() => setStatus(""), 2000);
     } catch (err) {
-      setShowStatus("Error de captura");
+      setStatus("Error de captura");
     } finally {
       setSharing(false);
-    }
-  };
-
-  const handleNativeShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'ToxicTracker',
-          text: `Mira mis resultados tóxicos: @${results.username}. Analizado con ToxicTracker Pro.`,
-          url: window.location.origin
-        });
-      } catch (err) {}
     }
   };
 
@@ -170,22 +157,24 @@ const ShareDialog = ({ results, onClose }) => {
       <motion.div initial={{ y: 200, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 200, opacity: 0 }} className="relative w-full max-w-sm bg-stone-900 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl">
         <div className="p-8">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-black text-white italic">COMPARTIR</h3>
+            <h3 className="text-xl font-black text-white italic tracking-tighter">COMPARTIR</h3>
             <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors text-stone-500"><X className="w-5 h-5" /></button>
           </div>
-          <div className="grid grid-cols-3 gap-4 mb-8">
-            <ShareOption icon={<Download />} label="Descargar" onClick={handleDownload} highlight={true} />
-            <ShareOption icon={<Share2 />} label="Compartir" onClick={handleNativeShare} disabled={!navigator.share} />
-            <ShareOption icon={copied ? <Check /> : <Link2 />} label={copied ? "Copiado" : "Copiar"} onClick={() => {
-              navigator.clipboard.writeText(window.location.origin);
-              setCopied(true);
-              setShowStatus("¡Copiado!");
-              setTimeout(() => { setCopied(false); setShowStatus(""); }, 2000);
-            }} />
+          
+          <div className="flex justify-center mb-8">
+            <ShareOption 
+              icon={<Download />} 
+              label={sharing ? "Generando..." : "Descargar Imagen"} 
+              onClick={handleDownload} 
+              highlight={true} 
+              disabled={sharing}
+            />
           </div>
-          {showStatus && (
-            <div className="text-center py-2 bg-toxic/10 rounded-xl mb-4 text-[10px] font-black text-toxic uppercase tracking-widest animate-pulse">{showStatus}</div>
+
+          {status && (
+            <div className="text-center py-2 bg-toxic/10 rounded-xl mb-4 text-[10px] font-black text-toxic uppercase tracking-widest animate-pulse">{status}</div>
           )}
+
           <div className="w-full aspect-[9/16] bg-stone-950 rounded-2xl border border-white/5 overflow-hidden relative shadow-inner">
             <div className="scale-[0.4] origin-top absolute top-0 left-1/2 -translate-x-1/2 shadow-2xl"><ShareCard results={results} /></div>
             <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-transparent" />
