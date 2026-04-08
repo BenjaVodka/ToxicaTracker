@@ -54,6 +54,13 @@ const ShareOption = ({ icon, label, onClick, disabled = false, highlight = false
 
 const ShareCard = ({ results }) => {
   const score = results.toxicScore;
+  const rawHandle = results.username || auth.currentUser?.displayName || auth.currentUser?.email || 'usuario';
+  const viewerHandle = String(rawHandle)
+    .trim()
+    .replace(/^@/, '')
+    .split('@')[0]
+    .replace(/\s+/g, '') || 'usuario';
+  const viewerPhotoUrl = results.profilePhotoUrl || auth.currentUser?.photoURL || '';
   
   const getTheme = (s) => {
     if (s >= 70) return { 
@@ -140,12 +147,12 @@ const ShareCard = ({ results }) => {
       {/* Profile Section */}
       <div className="relative z-10 flex flex-col items-center mb-8 px-8">
         <div className="relative p-0.5 rounded-[1.5rem] bg-gradient-to-tr transition-all" style={{ backgroundImage: `linear-gradient(to top right, transparent, rgba(255,255,255,0.1))` }}>
-           <UserAvatar name={results.username} size="w-20 h-20" />
+           <UserAvatar name={viewerHandle} imageUrl={viewerPhotoUrl} size="w-20 h-20" />
            <div className={`absolute -bottom-1 -right-1 p-1.5 rounded-lg bg-gradient-to-tr ${theme.accent} shadow-xl border-2 border-stone-900`}>
               <CheckCircle2 className="w-3 h-3 text-stone-950" />
            </div>
         </div>
-        <h2 className="text-3xl font-black text-white mt-4 italic tracking-tighter">@{results.username}</h2>
+        <h2 className="text-3xl font-black text-white mt-4 italic tracking-tighter">@{viewerHandle}</h2>
         <div className={`mt-2 px-4 py-1 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white text-[8px] font-black uppercase tracking-[0.2em]`}>
            Informe de Salud Social 🔒
         </div>
@@ -215,7 +222,14 @@ const ShareDialog = ({ results, onClose }) => {
       });
       
       const link = document.createElement('a');
-      link.download = `toxic-tracker-${results.username}.png`;
+      const rawDownloadOwner = results.username || auth.currentUser?.displayName || auth.currentUser?.email || 'usuario';
+      const safeDownloadOwner = String(rawDownloadOwner)
+        .trim()
+        .replace(/^@/, '')
+        .split('@')[0]
+        .replace(/\s+/g, '_')
+        .toLowerCase() || 'usuario';
+      link.download = `toxic-tracker-${safeDownloadOwner}.png`;
       link.href = canvas.toDataURL("image/png", 1.0);
       link.click();
       setStatus("¡Guardado en HD!");
@@ -423,14 +437,23 @@ const MetricCard = ({ icon, label, value, subLabel, highlight }) => (
   </div>
 )
 
-const UserAvatar = ({ name, size = "w-12 h-12" }) => {
+const UserAvatar = ({ name, imageUrl = '', size = "w-12 h-12" }) => {
   const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
+  const [sourceIndex, setSourceIndex] = useState(0);
 
   // Fallback Moderno de Cristal si Instagram falla
   const initials = name ? name.substring(0, 1).toUpperCase() : '?';
-  
-  const primaryUrl = `https://unavatar.io/instagram/${name}`;
+  const fallbackUrl = name ? `https://unavatar.io/instagram/${encodeURIComponent(name)}` : '';
+  const sources = [imageUrl, fallbackUrl]
+    .map((url) => (typeof url === 'string' ? url.trim() : ''))
+    .filter(Boolean)
+    .filter((url, index, arr) => arr.indexOf(url) === index);
+  const currentSrc = sources[sourceIndex];
+
+  useEffect(() => {
+    setLoaded(false);
+    setSourceIndex(0);
+  }, [name, imageUrl]);
 
   return (
     <div className={`${size} rounded-2xl overflow-hidden glass border border-white/10 flex-shrink-0 bg-stone-900 flex items-center justify-center relative group`}>
@@ -442,14 +465,22 @@ const UserAvatar = ({ name, size = "w-12 h-12" }) => {
       )}
 
       {/* 2. Capa de Imagen Real */}
-      {!error && (
-        <img 
-          src={primaryUrl} 
+      {currentSrc && (
+        <img
+          src={currentSrc}
           alt={name}
           className={`w-full h-full object-cover relative z-10 transition-all duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}
           loading="lazy"
           onLoad={() => setLoaded(true)}
-          onError={() => setError(true)}
+          onError={() => {
+            if (sourceIndex < sources.length - 1) {
+              setLoaded(false);
+              setSourceIndex(sourceIndex + 1);
+            } else {
+              setLoaded(false);
+              setSourceIndex(sources.length);
+            }
+          }}
         />
       )}
       
