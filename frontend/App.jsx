@@ -25,11 +25,177 @@ import {
   BarChart2,
   Download,
   Share2,
-  Search
+  Search,
+  Link2,
+  Check,
+  X
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { auth, googleProvider } from './firebase'
 import { signInWithPopup, signOut } from 'firebase/auth'
+
+
+const ShareOption = ({ icon, label, onClick, disabled = false, highlight = false }) => (
+  <button 
+    onClick={onClick}
+    disabled={disabled}
+    className={`flex flex-col items-center gap-2 group transition-all ${disabled ? 'opacity-30 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}`}
+  >
+    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-all ${
+      highlight ? 'bg-toxic border-toxic shadow-[0_0_15px_rgba(74,222,128,0.3)]' : 'bg-white/5 border-white/10 group-hover:bg-white/10 group-hover:border-white/20'
+    }`}>
+      {React.cloneElement(icon, { className: `w-6 h-6 ${highlight ? 'text-stone-950' : 'text-white'}` })}
+    </div>
+    <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500 group-hover:text-stone-300">
+      {label}
+    </span>
+  </button>
+);
+
+const ShareCard = ({ results }) => {
+  const getToxicityDiagnosis = (res) => {
+    if (!res) return { text: "No hay datos", emoji: "❓", title: "N/A", color: "text-stone-500", bg: "bg-stone-500/10", border: "border-stone-500/20" };
+    const score = res.toxicScore;
+    const count = res.notFollowingBack.length;
+    
+    // Simplificado para la tarjeta
+    if (score >= 90) return { emoji: "☢️", text: "Tu cuenta es Chernobyl. Tienes traidores infiltrados hasta en la sopa. 🚩", bg: "bg-red-500/10", border: "border-red-500/20" };
+    if (score >= 70) return { emoji: "🕵️‍♂️", text: "Vives al límite. Hay traición en cada esquina. Duerme con un ojo abierto. 💣", bg: "bg-rose-500/10", border: "border-rose-500/20" };
+    if (score >= 40) return { emoji: "🧐", text: "Ni tan santo, ni tan tóxico. Tienes un círculo de amigos... sospechoso. 👀", bg: "bg-amber-500/10", border: "border-amber-500/20" };
+    return { emoji: "🌱", text: "Todo tranqui. Pocos traidores, mucha paz. Sigue así, campeón. ✨", bg: "bg-emerald-500/10", border: "border-emerald-500/20" };
+  };
+
+  const diag = getToxicityDiagnosis(results);
+  
+  return (
+    <div 
+      id="toxic-share-card"
+      className="w-[390px] h-[693px] bg-stone-950 px-8 py-12 flex flex-col relative overflow-hidden"
+    >
+      <div className={`absolute top-0 right-0 w-64 h-64 blur-[100px] rounded-full opacity-30 ${diag.bg}`} />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-toxic/10 blur-[100px] rounded-full" />
+      
+      <div className="relative z-10 mb-8">
+        <div className="flex items-center gap-2 mb-1">
+          <Zap className="w-5 h-5 text-toxic fill-current" />
+          <span className="text-xl font-black italic tracking-tighter text-white">TOXIC TRACKER</span>
+        </div>
+        <p className="text-[10px] font-black text-stone-500 uppercase tracking-[0.3em]">Análisis de Social Health</p>
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center mb-10 mt-4">
+        <UserAvatar name={results.username} size="w-24 h-24" />
+        <h2 className="text-2xl font-black text-white mt-4 italic">@{results.username}</h2>
+        <div className="bg-white/5 border border-white/10 px-4 py-1 rounded-full mt-2 text-toxic text-[10px] font-black uppercase tracking-widest">
+          Resultado Oficial
+        </div>
+      </div>
+
+      <div className="relative z-10 grid grid-cols-2 gap-4 mb-10">
+        <div className="bg-white/5 border border-white/5 p-4 rounded-3xl">
+          <p className="text-[9px] font-black text-stone-500 uppercase tracking-widest mb-1">Score Tóxico</p>
+          <p className="text-3xl font-black text-red-500">{results.toxicScore}%</p>
+        </div>
+        <div className="bg-white/5 border border-white/5 p-4 rounded-3xl">
+          <p className="text-[9px] font-black text-stone-500 uppercase tracking-widest mb-1">Traidores</p>
+          <p className="text-3xl font-black text-white">{results.notFollowingBack.length}</p>
+        </div>
+      </div>
+
+      <div className={`relative z-10 p-6 rounded-[2rem] border ${diag.border} ${diag.bg} mb-auto shadow-2xl`}>
+        <div className="flex items-center gap-2 mb-2">
+           <span className="text-xl">{diag.emoji}</span>
+           <span className="text-[9px] font-black uppercase tracking-widest text-stone-300">Diagnóstico IA</span>
+        </div>
+        <p className="text-base font-bold text-white leading-relaxed italic">
+          "{diag.text}"
+        </p>
+      </div>
+
+      <div className="relative z-10 pt-8 border-t border-white/5 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-black text-white">toxicatracker.app</p>
+          <p className="text-[9px] text-stone-500 font-bold">Analiza tu círculo de confianza</p>
+        </div>
+        <div className="w-12 h-12 bg-white rounded-lg p-1">
+           <div className="w-full h-full bg-stone-950 flex items-center justify-center">
+              <Zap className="w-6 h-6 text-toxic" />
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ShareDialog = ({ results, onClose }) => {
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [showStatus, setShowStatus] = useState("");
+
+  const handleDownload = async () => {
+    setSharing(true);
+    setShowStatus("Generando tarjeta...");
+    try {
+      const element = document.querySelector("#toxic-share-card-capture");
+      if (!element) throw new Error("Element not found");
+      const canvas = await html2canvas(element, { useCORS: true, allowTaint: false, backgroundColor: "#0c0a09", scale: 2 });
+      const link = document.createElement('a');
+      link.download = `toxic-tracker-${results.username}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      setShowStatus("¡Guardado!");
+      setTimeout(() => setShowStatus(""), 2000);
+    } catch (err) {
+      setShowStatus("Error de captura");
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'ToxicTracker',
+          text: `Mira mis resultados tóxicos: @${results.username}. Analizado con ToxicTracker Pro.`,
+          url: window.location.origin
+        });
+      } catch (err) {}
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-stone-950/80 backdrop-blur-sm" />
+      <motion.div initial={{ y: 200, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 200, opacity: 0 }} className="relative w-full max-w-sm bg-stone-900 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl">
+        <div className="p-8">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xl font-black text-white italic">COMPARTIR</h3>
+            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors text-stone-500"><X className="w-5 h-5" /></button>
+          </div>
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <ShareOption icon={<Download />} label="Descargar" onClick={handleDownload} highlight={true} />
+            <ShareOption icon={<Share2 />} label="Compartir" onClick={handleNativeShare} disabled={!navigator.share} />
+            <ShareOption icon={copied ? <Check /> : <Link2 />} label={copied ? "Copiado" : "Copiar"} onClick={() => {
+              navigator.clipboard.writeText(window.location.origin);
+              setCopied(true);
+              setShowStatus("¡Copiado!");
+              setTimeout(() => { setCopied(false); setShowStatus(""); }, 2000);
+            }} />
+          </div>
+          {showStatus && (
+            <div className="text-center py-2 bg-toxic/10 rounded-xl mb-4 text-[10px] font-black text-toxic uppercase tracking-widest animate-pulse">{showStatus}</div>
+          )}
+          <div className="w-full aspect-[9/16] bg-stone-950 rounded-2xl border border-white/5 overflow-hidden relative shadow-inner">
+            <div className="scale-[0.4] origin-top absolute top-0 left-1/2 -translate-x-1/2 shadow-2xl"><ShareCard results={results} /></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-transparent" />
+          </div>
+        </div>
+      </motion.div>
+      <div className="fixed -left-[2000px] top-0 pointer-events-none" id="toxic-share-card-capture"><ShareCard results={results} /></div>
+    </div>
+  );
+};
 
 const Nav = ({ token, results, handleLogout, onLoginClick }) => (
   <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/10">
@@ -433,54 +599,8 @@ export default function App() {
   const [error, setError] = useState(null);
   const [checkingHistory, setCheckingHistory] = useState(false);
   const [history, setHistory] = useState([]);
-  const [showShareCard, setShowShareCard] = useState(false);
-  const [isCapturing, setIsCapturing] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
-  const handleDownloadShareCard = async () => {
-    const card = document.getElementById('share-card');
-    if (!card) return;
-
-    try {
-      setIsCapturing(true);
-      const canvas = await html2canvas(card, {
-        scale: 2,
-        backgroundColor: '#000000',
-        useCORS: true,
-        logging: false
-      });
-
-      const dataUrl = canvas.toDataURL('image/png');
-
-      // Native Share for Mobile
-      if (navigator.share) {
-        const blob = await (await fetch(dataUrl)).blob();
-        const file = new File([blob], 'toxic-report.png', { type: 'image/png' });
-        
-        try {
-          await navigator.share({
-            files: [file],
-            title: 'Mi Informe Tóxico 🕵️‍♂️🔥',
-            text: 'Mira mi diagnóstico en TóxicaTracker 🚀'
-          });
-          return;
-        } catch (e) {
-          // Fallback to download if share is cancelled or fails
-        }
-      }
-
-      // Fallback: Download for PC/Other
-      const link = document.createElement('a');
-      link.download = `toxic-report-${results.toxicScore}.png`;
-      link.href = dataUrl;
-      link.click();
-
-    } catch (err) {
-      console.error("Error generating image:", err);
-      alert("No pudimos generar la imagen. Intenta sacar una captura manual 📸");
-    } finally {
-      setIsCapturing(false);
-    }
-  };
 
   const [globalActivity, setGlobalActivity] = useState([]);
   const [turboMode, setTurboMode] = useState(false);
@@ -805,10 +925,10 @@ export default function App() {
 
   // Log Share Events
   React.useEffect(() => {
-    if (showShareCard) {
+    if (showShareDialog) {
       fetch(`${API_BASE_URL}/api/activity/log-share`, { method: 'POST' }).catch(() => {});
     }
-  }, [showShareCard]);
+  }, [showShareDialog]);
 
   // --- NUEVO: Polling para detectar cuando la extensión sube datos ---
   React.useEffect(() => {
@@ -1142,7 +1262,7 @@ export default function App() {
                 </div>
                 <div className="flex gap-3">
                   <button 
-                    onClick={() => setShowShareCard(true)}
+                    onClick={() => setShowShareDialog(true)}
                     className="glass px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 bg-toxic/10 border-toxic/20 text-toxic hover:bg-toxic/20 transition-all"
                   >
                     <Sparkles className="w-4 h-4" /> Compartir en IG
@@ -1156,104 +1276,11 @@ export default function App() {
 
 
               <AnimatePresence>
-                {showShareCard && (
-                  <motion.div 
-                    initial={{ opacity: 0 }} 
-                    animate={{ opacity: 1 }} 
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-xl p-4 flex items-center justify-center overflow-y-auto"
-                  >
-                    <button onClick={() => setShowShareCard(false)} className="absolute top-6 right-6 text-white/50 hover:text-white z-[210]">✕ Cerrar</button>
-                    
-                    <motion.div 
-                      initial={{ scale: 0.9, y: 20 }}
-                      animate={{ scale: 1, y: 0 }}
-                      className="bg-black border border-white/10 rounded-[2.5rem] w-full max-w-[380px] aspect-[9/16] relative overflow-hidden shadow-2xl flex flex-col p-10 font-sans"
-                      id="share-card"
-                    >
-                      {/* Decorative Background */}
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-toxic/20 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
-                      <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2" />
-                      
-                      <div className="relative z-10 flex flex-col h-full">
-                        <div className="flex items-center gap-2 mb-10">
-                          <HeartCrack className="w-8 h-8 text-toxic" />
-                          <span className="font-extrabold text-xl tracking-tighter">Tóxica<span className="text-toxic">Tracker</span></span>
-                        </div>
-
-                        <div className="flex-1 space-y-8">
-                          <div>
-                            <p className="text-[10px] uppercase font-black tracking-[0.3em] text-stone-500 mb-2">Mi Nivel de Toxicidad</p>
-                            <h2 className="text-7xl font-black text-toxic tracking-tighter leading-none">{results.toxicScore}%</h2>
-                            <div className="h-1.5 bg-white/5 w-full mt-4 rounded-full overflow-hidden">
-                              <div className="h-full bg-toxic" style={{ width: `${results.toxicScore}%` }} />
-                            </div>
-                          </div>
-
-                          <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
-                             <p className="text-[10px] uppercase font-black text-toxic mb-2 flex items-center gap-2">
-                               <Zap className="w-3 h-3 fill-toxic" /> Diagnóstico IA
-                             </p>
-                             <p className="text-sm font-bold text-stone-200 leading-relaxed italic">
-                               "{getToxicityDiagnosis(results).text}"
-                             </p>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-center">
-                              <p className="text-[8px] uppercase font-black text-stone-500 mb-1 tracking-widest">Tóxicos</p>
-                              <p className="text-2xl font-black text-white">{results.notFollowingBack.length}</p>
-                            </div>
-                            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-center">
-                              <p className="text-[8px] uppercase font-black text-stone-500 mb-1 tracking-widest">Fans</p>
-                              <p className="text-2xl font-black text-white">{results.followersCount}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-8 pt-8 border-t border-white/10 text-center">
-                          <div className="flex items-center justify-center gap-2 bg-emerald-500/10 border border-emerald-500/20 py-3 rounded-2xl mb-4">
-                             <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                             <span className="text-[10px] font-black uppercase text-emerald-500 tracking-widest">Análisis 100% Seguro</span>
-                          </div>
-                          <p className="text-[8px] text-stone-500 uppercase font-black tracking-widest">Generado en toxicatracker.vercel.app</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                    
-                    <div className="absolute bottom-10 flex flex-col items-center gap-6 w-full max-w-[380px]">
-                       <button 
-                        onClick={handleDownloadShareCard}
-                        disabled={isCapturing}
-                        className={`w-full glass py-4 rounded-2xl flex items-center justify-center gap-3 font-black uppercase tracking-widest text-sm transition-all shadow-2xl ${
-                          isCapturing ? 'bg-white/5 text-stone-500' : 'bg-toxic text-white hover:scale-105 active:scale-95'
-                        }`}
-                       >
-                         {isCapturing ? (
-                           <>
-                            <div className="w-4 h-4 border-2 border-stone-500 border-t-white rounded-full animate-spin" />
-                            Capturando...
-                           </>
-                         ) : (
-                           <>
-                            <Download className="w-5 h-5" /> Descargar Imagen
-                           </>
-                         )}
-                       </button>
-
-                       <div className="flex flex-col items-center gap-2">
-                         <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Paso 2: Subir a Instagram</p>
-                         <a 
-                          href="https://www.instagram.com/reels/create/" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-toxic hover:text-white transition-colors text-xs font-bold underline"
-                         >
-                           Ir a Subir Historias ↗
-                         </a>
-                       </div>
-                    </div>
-                  </motion.div>
+                {showShareDialog && (
+                  <ShareDialog 
+                    results={results} 
+                    onClose={() => setShowShareDialog(false)} 
+                  />
                 )}
               </AnimatePresence>
 

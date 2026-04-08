@@ -23,15 +23,21 @@ public class FollowersSnapshot {
     @JoinColumn(name = "user_id")
     private AppUser user;
 
-    @ElementCollection
-    @CollectionTable(name = "snapshot_followers", joinColumns = @JoinColumn(name = "snapshot_id"))
-    @Column(name = "username")
-    private Set<String> followers;
+    @ManyToMany
+    @JoinTable(
+        name = "snapshot_followers",
+        joinColumns = @JoinColumn(name = "snapshot_id"),
+        inverseJoinColumns = @JoinColumn(name = "instagram_account_id")
+    )
+    private Set<InstagramAccount> followers;
 
-    @ElementCollection
-    @CollectionTable(name = "snapshot_following", joinColumns = @JoinColumn(name = "snapshot_id"))
-    @Column(name = "username")
-    private Set<String> following;
+    @ManyToMany
+    @JoinTable(
+        name = "snapshot_following",
+        joinColumns = @JoinColumn(name = "snapshot_id"),
+        inverseJoinColumns = @JoinColumn(name = "instagram_account_id")
+    )
+    private Set<InstagramAccount> following;
 
     private String ipAddress;
 

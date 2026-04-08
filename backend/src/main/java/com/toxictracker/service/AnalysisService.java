@@ -26,6 +26,7 @@ public class AnalysisService {
     private final ObjectMapper objectMapper;
     private final FollowersSnapshotRepository snapshotRepository;
     private final com.toxictracker.repository.ActivityLogRepository activityLogRepository;
+    private final com.toxictracker.repository.InstagramAccountRepository accountRepository;
 
     public Set<String> parseInstagramJson(MultipartFile file) {
         try {
@@ -83,7 +84,9 @@ public class AnalysisService {
         Set<String> newUnfollowers = new HashSet<>();
 
         if (!snapshots.isEmpty()) {
-            Set<String> previousFollowers = snapshots.get(0).getFollowers();
+            Set<String> previousFollowers = snapshots.get(0).getFollowers().stream()
+                    .map(com.toxictracker.model.InstagramAccount::getUsername)
+                    .collect(Collectors.toSet());
             newUnfollowers = previousFollowers.stream()
                     .filter(u -> !followers.contains(u))
                     .collect(Collectors.toSet());
@@ -94,11 +97,14 @@ public class AnalysisService {
         int unionSize = followers.size() + following.size() - mutuals.size();
         double mutualityRate = unionSize == 0 ? 0 : (mutuals.size() * 100.0 / unionSize);
 
-        // Save new snapshot for future comparison
+        // Sync accounts and save new snapshot for future comparison
+        Set<com.toxictracker.model.InstagramAccount> followerAccounts = syncInstagramAccounts(followers);
+        Set<com.toxictracker.model.InstagramAccount> followingAccounts = syncInstagramAccounts(following);
+
         FollowersSnapshot snapshot = FollowersSnapshot.builder()
                 .user(user)
-                .followers(followers)
-                .following(following)
+                .followers(followerAccounts)
+                .following(followingAccounts)
                 .ipAddress(ipAddress)
                 .build();
         snapshotRepository.save(snapshot);
@@ -121,8 +127,12 @@ public class AnalysisService {
     }
 
     public AnalysisResponse buildResponseFromSnapshot(FollowersSnapshot snapshot) {
-        Set<String> followers = snapshot.getFollowers();
-        Set<String> following = snapshot.getFollowing();
+        Set<String> followers = snapshot.getFollowers().stream()
+                .map(com.toxictracker.model.InstagramAccount::getUsername)
+                .collect(Collectors.toSet());
+        Set<String> following = snapshot.getFollowing().stream()
+                .map(com.toxictracker.model.InstagramAccount::getUsername)
+                .collect(Collectors.toSet());
 
         Set<String> notFollowingMeBack = following.stream()
                 .filter(u -> !followers.contains(u))
@@ -165,13 +175,26 @@ public class AnalysisService {
             map.put("date", s.getCreatedAt());
 
             // Re-calculate toxic score for the history point
-            Set<String> followers = s.getFollowers();
-            Set<String> following = s.getFollowing();
+            Set<String> followers = s.getFollowers().stream()
+                    .map(com.toxictracker.model.InstagramAccount::getUsername)
+                    .collect(Collectors.toSet());
+            Set<String> following = s.getFollowing().stream()
+                    .map(com.toxictracker.model.InstagramAccount::getUsername)
+                    .collect(Collectors.toSet());
             long notFollowingBack = following.stream().filter(u -> !followers.contains(u)).count();
             double toxicScore = following.isEmpty() ? 0 : (notFollowingBack * 100.0 / following.size());
 
             map.put("toxicScore", Math.round(toxicScore * 10) / 10.0);
             return map;
         }).collect(Collectors.toList());
+    }
+
+    private Set<com.toxictracker.model.InstagramAccount> syncInstagramAccounts(Set<String> usernames) {
+        return usernames.stream().map(username -> 
+            accountRepository.findByUsername(username)
+                .orElseGet(() -> accountRepository.save(com.toxictracker.model.InstagramAccount.builder()
+                    .username(username)
+                    .build()))
+        ).collect(Collectors.toSet());
     }
 }
