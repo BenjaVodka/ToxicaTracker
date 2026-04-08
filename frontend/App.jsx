@@ -420,9 +420,15 @@ export default function App() {
           })
           .then(res => {
             if (res.ok) console.log("✅ Datos sincronizados con el servidor PostgreSQL.");
-            else console.error("❌ Error al sincronizar con el servidor.");
+            else {
+              console.error("❌ Error al sincronizar con el servidor.");
+              // Opcional: Avisar al usuario que su chisme no se guardó en la nube
+            }
           })
-          .catch(err => console.error("❌ Error de red en sincronización:", err));
+          .catch(err => {
+            console.error("❌ Error de red en sincronización:", err);
+            // Si el sync falla pero el local funcionó, no bloqueamos al usuario
+          });
         }
       }
     };
@@ -443,11 +449,26 @@ export default function App() {
   React.useEffect(() => {
     if (token) {
       setCheckingHistory(true);
+      setError(null);
+
+      // Timeout de 12 segundos para no dejar al usuario bloqueado
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        setCheckingHistory(false);
+        setError("El servidor de la nube tarda demasiado en responder. Revisa si Render está activo. ⏱️");
+      }, 12000);
+
       fetch(`${API_BASE_URL}/api/analysis/latest`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` },
+        signal: controller.signal
       })
       .then(res => {
         if (res.status === 200) return res.json();
+        if (res.status === 403 || res.status === 401) {
+          handleLogout();
+          throw new Error("Tu sesión ha caducado. Por favor, entra de nuevo.");
+        }
         return null;
       })
       .then(data => {
@@ -466,8 +487,15 @@ export default function App() {
           window.resultsLoaded = true;
         }
       })
-      .catch(err => console.error("Error cargando historial:", err))
-      .finally(() => setCheckingHistory(false));
+      .catch(err => {
+        if (err.name === 'AbortError') return; // Manejado por el timeout
+        console.error("Error cargando historial:", err);
+        setError(`Error de conexión con la nube: ${err.message}. Verifica que VITE_API_BASE_URL sea correcta.`);
+      })
+      .finally(() => {
+        clearTimeout(timeoutId);
+        setCheckingHistory(false);
+      });
     }
   }, [token]);
 
