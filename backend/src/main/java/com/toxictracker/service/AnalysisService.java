@@ -25,6 +25,7 @@ public class AnalysisService {
 
     private final ObjectMapper objectMapper;
     private final FollowersSnapshotRepository snapshotRepository;
+    private final com.toxictracker.repository.ActivityLogRepository activityLogRepository;
 
     public Set<String> parseInstagramJson(MultipartFile file) {
         try {
@@ -102,6 +103,11 @@ public class AnalysisService {
                 .build();
         snapshotRepository.save(snapshot);
 
+        // Log Global Activity (Anonymous)
+        activityLogRepository.save(com.toxictracker.model.ActivityLog.builder()
+                .actionType("ANALYZE")
+                .build());
+
         return AnalysisResponse.builder()
                 .followersCount(followers.size())
                 .followingCount(following.size())
@@ -153,17 +159,17 @@ public class AnalysisService {
 
     public List<Map<String, Object>> getHistory(AppUser user) {
         List<FollowersSnapshot> snapshots = snapshotRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
-        
+
         return snapshots.stream().map(s -> {
             Map<String, Object> map = new HashMap<>();
             map.put("date", s.getCreatedAt());
-            
+
             // Re-calculate toxic score for the history point
             Set<String> followers = s.getFollowers();
             Set<String> following = s.getFollowing();
             long notFollowingBack = following.stream().filter(u -> !followers.contains(u)).count();
             double toxicScore = following.isEmpty() ? 0 : (notFollowingBack * 100.0 / following.size());
-            
+
             map.put("toxicScore", Math.round(toxicScore * 10) / 10.0);
             return map;
         }).collect(Collectors.toList());

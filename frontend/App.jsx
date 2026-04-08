@@ -395,6 +395,42 @@ export default function App() {
   const [checkingHistory, setCheckingHistory] = useState(false);
   const [history, setHistory] = useState([]);
   const [showShareCard, setShowShareCard] = useState(false);
+  const [globalActivity, setGlobalActivity] = useState([]);
+
+  const GlobalFeed = ({ activity }) => {
+    if (!activity || activity.length === 0) return null;
+    
+    const getActionMessage = (type) => {
+      switch(type) {
+        case 'ANALYZE': return "Alguien acaba de analizar su cuenta 🔥";
+        case 'SHARE': return "Alguien compartió su diagnóstico en IG 🚀";
+        default: return "Actividad detectada en el sistema ✨";
+      }
+    };
+
+    return (
+      <div className="space-y-3">
+        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-600 mb-4 flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          En Vivo: Actividad Global
+        </h4>
+        {activity.slice(0, 5).map((act, i) => (
+          <motion.div 
+            key={act.id || i}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3 text-[11px] font-bold text-stone-400 bg-white/[0.02] p-3 rounded-xl border border-white/5 hover:bg-white/5 transition-all"
+          >
+            <span className="text-lg">{act.actionType === 'ANALYZE' ? '🕵️‍♂️' : '📸'}</span>
+            <div className="flex-1">
+              <p className="text-stone-200">{getActionMessage(act.actionType)}</p>
+              <p className="text-[9px] text-stone-600 uppercase mt-0.5">Hace unos instantes</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    );
+  };
 
   const ToxicityTimeline = ({ data }) => {
     if (!data || data.length < 2) return null;
@@ -428,6 +464,53 @@ export default function App() {
     );
   };
   
+  const getToxicityDiagnosis = (res) => {
+    if (!res) return null;
+    const score = res.toxicScore;
+    const count = res.notFollowingBack.length;
+
+    if (score >= 90) return { 
+      emoji: "☢️", 
+      title: "NIVEL: ACCIDENTE NUCLEAR", 
+      text: `Tienes un ${score}% de toxicidad. Tu cuenta es básicamente Chernobyl. ¿Seguro que no eres un villano de película? Tienes ${count} traidores infiltrados. 🚩`,
+      color: "text-red-500",
+      bg: "bg-red-500/10",
+      border: "border-red-500/20"
+    };
+    if (score >= 70) return { 
+      emoji: "🕵️‍♂️", 
+      title: "NIVEL: CAMPO DE MINAS", 
+      text: "Vives al límite. Hay traición en cada esquina. Duerme con un ojo abierto (y el otro en esta app). 💣",
+      color: "text-rose-500",
+      bg: "bg-rose-500/10",
+      border: "border-rose-500/20"
+    };
+    if (score >= 40) return { 
+      emoji: "🧐", 
+      title: "NIVEL: SOSPECHAS ALTAS", 
+      text: "Ni tan santo, ni tan tóxico. Tienes un círculo de amigos... interesante. Vigila a los que no te dan like. 👀",
+      color: "text-amber-500",
+      bg: "bg-amber-500/10",
+      border: "border-amber-500/20"
+    };
+    if (score >= 10) return { 
+      emoji: "🌱", 
+      title: "NIVEL: JARDÍN SANO", 
+      text: "Todo tranqui por aquí. Un par de deslices, pero tienes gente leal. No dejes que la fama te cambie. ✨",
+      color: "text-emerald-500",
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-500/20"
+    };
+    return { 
+      emoji: "😇", 
+      title: "NIVEL: SANTO DE INTERNET", 
+      text: "Eres un ángel. Te aman más que a la pizza fría. O quizás borraste a todos antes de hacer el escaneo... 🕵️‍♂️✨",
+      color: "text-toxic",
+      bg: "bg-toxic/10",
+      border: "border-toxic/20"
+    };
+  };
+
   // Modificado: Escuchar eventos de la extension
   React.useEffect(() => {
     const handleMessage = (event) => {
@@ -577,6 +660,26 @@ export default function App() {
       });
     }
   }, [token]);
+
+  // Periodic Global Activity Fetch
+  React.useEffect(() => {
+    const fetchActivity = () => {
+      fetch(`${API_BASE_URL}/api/activity/latest`)
+        .then(res => res.json())
+        .then(data => setGlobalActivity(data))
+        .catch(() => {});
+    };
+    fetchActivity();
+    const interval = setInterval(fetchActivity, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Log Share Events
+  React.useEffect(() => {
+    if (showShareCard) {
+      fetch(`${API_BASE_URL}/api/activity/log-share`, { method: 'POST' }).catch(() => {});
+    }
+  }, [showShareCard]);
 
   // --- NUEVO: Polling para detectar cuando la extensión sube datos ---
   React.useEffect(() => {
@@ -896,7 +999,7 @@ export default function App() {
         ) : (
           <section id="results-section" className="pt-32 pb-20 container mx-auto px-6">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-5xl mx-auto">
-              <div className="flex items-center justify-between mb-12">
+              <div className="flex items-center justify-between mb-8">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <h1 className="text-4xl font-black text-gradient">{results.message}</h1>
@@ -921,6 +1024,35 @@ export default function App() {
                 </div>
               </div>
 
+              {/* AI Analyst Block */}
+              {(() => {
+                const diag = getToxicityDiagnosis(results);
+                return (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`mb-12 p-8 rounded-[2.5rem] border ${diag.border} ${diag.bg} relative overflow-hidden group`}
+                  >
+                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <span className="text-8xl">{diag.emoji}</span>
+                    </div>
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] ${diag.bg} border ${diag.border} ${diag.color}`}>
+                          {diag.title}
+                        </div>
+                        <span className="text-xs text-stone-500 font-bold uppercase tracking-widest flex items-center gap-2">
+                          <Zap className="w-3 h-3" /> Análisis de IA Sarcástica
+                        </span>
+                      </div>
+                      <p className="text-xl md:text-2xl font-bold text-white leading-tight max-w-2xl">
+                        "{diag.text}"
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })()}
+
               <AnimatePresence>
                 {showShareCard && (
                   <motion.div 
@@ -942,7 +1074,7 @@ export default function App() {
                       <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2" />
                       
                       <div className="relative z-10 flex flex-col h-full">
-                        <div className="flex items-center gap-2 mb-12">
+                        <div className="flex items-center gap-2 mb-10">
                           <HeartCrack className="w-8 h-8 text-toxic" />
                           <span className="font-extrabold text-xl tracking-tighter">Tóxica<span className="text-toxic">Tracker</span></span>
                         </div>
@@ -951,34 +1083,28 @@ export default function App() {
                           <div>
                             <p className="text-[10px] uppercase font-black tracking-[0.3em] text-stone-500 mb-2">Mi Nivel de Toxicidad</p>
                             <h2 className="text-7xl font-black text-toxic tracking-tighter leading-none">{results.toxicScore}%</h2>
-                            <div className="h-1 bg-white/5 w-full mt-4 rounded-full overflow-hidden">
+                            <div className="h-1.5 bg-white/5 w-full mt-4 rounded-full overflow-hidden">
                               <div className="h-full bg-toxic" style={{ width: `${results.toxicScore}%` }} />
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
-                              <p className="text-[8px] uppercase font-black text-stone-500 mb-1">Tóxicos</p>
-                              <p className="text-2xl font-black text-white">{results.notFollowingBack.length}</p>
-                            </div>
-                            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
-                              <p className="text-[8px] uppercase font-black text-stone-500 mb-1">Fans</p>
-                              <p className="text-2xl font-black text-white">{results.followersCount}</p>
-                            </div>
+                          <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
+                             <p className="text-[10px] uppercase font-black text-toxic mb-2 flex items-center gap-2">
+                               <Zap className="w-3 h-3 fill-toxic" /> Diagnóstico IA
+                             </p>
+                             <p className="text-sm font-bold text-stone-200 leading-relaxed italic">
+                               "{getToxicityDiagnosis(results).text}"
+                             </p>
                           </div>
 
-                          <div>
-                            <p className="text-[10px] uppercase font-black tracking-widest text-toxic mb-4">Top Traidores 🕵️‍♂️🔥</p>
-                            <div className="space-y-3">
-                              {results.notFollowingBack.slice(0, 5).map(u => (
-                                <div key={u} className="flex items-center gap-3">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-toxic" />
-                                  <p className="font-bold text-sm text-stone-300">@{u}</p>
-                                </div>
-                              ))}
-                              {results.notFollowingBack.length > 5 && (
-                                <p className="text-[10px] text-stone-500 font-bold pl-4">Y {results.notFollowingBack.length - 5} personas más...</p>
-                              )}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-center">
+                              <p className="text-[8px] uppercase font-black text-stone-500 mb-1 tracking-widest">Tóxicos</p>
+                              <p className="text-2xl font-black text-white">{results.notFollowingBack.length}</p>
+                            </div>
+                            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-center">
+                              <p className="text-[8px] uppercase font-black text-stone-500 mb-1 tracking-widest">Fans</p>
+                              <p className="text-2xl font-black text-white">{results.followersCount}</p>
                             </div>
                           </div>
                         </div>
@@ -988,13 +1114,13 @@ export default function App() {
                              <ShieldCheck className="w-4 h-4 text-emerald-500" />
                              <span className="text-[10px] font-black uppercase text-emerald-500 tracking-widest">Análisis 100% Seguro</span>
                           </div>
-                          <p className="text-[8px] text-stone-500 uppercase font-black tracking-widest">Web: toxicatracker.vercel.app</p>
+                          <p className="text-[8px] text-stone-500 uppercase font-black tracking-widest">Generado en toxicatracker.vercel.app</p>
                         </div>
                       </div>
                     </motion.div>
                     
                     <div className="absolute bottom-10 flex flex-col items-center gap-4">
-                       <p className="text-white/60 text-sm font-medium">Sacar captura de pantalla para subir a Stories 📸</p>
+                       <p className="text-white/60 text-sm font-medium animate-pulse">Sacar captura de pantalla para stories 📸</p>
                     </div>
                   </motion.div>
                 )}
@@ -1038,22 +1164,29 @@ export default function App() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
+              {/* Lists and Feed Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div className="lg:col-span-4">
                   <UserList 
                     title="Traidores (No te siguen de vuelta)" 
                     users={results.notFollowingBack} 
-                    count={results.notFollowingBack.length}
-                    variant="danger"
+                    count={results.notFollowingBack.length} 
+                    variantSet="danger" 
                   />
                 </div>
-                <div className="space-y-6">
+                <div className="lg:col-span-4">
                   <UserList 
                     title="Fans Leales" 
                     users={results.fans} 
-                    count={results.fans.length}
-                    variant="success"
+                    count={results.fans.length} 
+                    variantSet="success" 
                   />
+                </div>
+                <div className="lg:col-span-4 space-y-8">
+                  <div className="glass p-8 rounded-[2rem] border-white/5 bg-white/[0.01]">
+                    <GlobalFeed activity={globalActivity} />
+                  </div>
+                  
                   {results.lostFollowers.length > 0 && (
                     <div className="glass p-6 rounded-3xl border-red-500/20 bg-red-500/5">
                       <div className="flex items-center gap-3 mb-4 text-red-500">
@@ -1080,4 +1213,3 @@ export default function App() {
     </div>
   )
 }
-
