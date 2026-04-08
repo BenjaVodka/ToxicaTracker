@@ -124,10 +124,16 @@ async function scrapeInstagram() {
                     const user = data?.data?.user || data?.user || data;
 
                     if (user?.username) {
+                        const bestPic =
+                            user.hd_profile_pic_url_info?.url ||
+                            user.profile_pic_url_hd ||
+                            user.profile_pic_url ||
+                            '';
+
                         return {
                             username: user.username,
                             full_name: user.full_name || user.username,
-                            pic: user.profile_pic_url || user.hd_profile_pic_url_info?.url || ''
+                            pic: bestPic
                         };
                     }
                 } catch (_) {
@@ -177,7 +183,11 @@ async function scrapeInstagram() {
                 list.push(...data.users.map((u) => ({
                     username: u.username,
                     full_name: u.full_name,
-                    pic: u.profile_pic_url
+                    pic:
+                        u.hd_profile_pic_url_info?.url ||
+                        u.profile_pic_url_hd ||
+                        u.profile_pic_url ||
+                        ''
                 })));
 
                 maxId = data.next_max_id;

@@ -146,13 +146,7 @@ const ShareCard = ({ results }) => {
 
       {/* Profile Section */}
       <div className="relative z-10 flex flex-col items-center mb-8 px-8">
-        <div className="relative p-0.5 rounded-[1.5rem] bg-gradient-to-tr transition-all" style={{ backgroundImage: `linear-gradient(to top right, transparent, rgba(255,255,255,0.1))` }}>
-           <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-white/15 to-white/5 border border-white/10 backdrop-blur-md" />
-           <div className={`absolute -bottom-1 -right-1 p-1.5 rounded-lg bg-gradient-to-tr ${theme.accent} shadow-xl border-2 border-stone-900`}>
-              <CheckCircle2 className="w-3 h-3 text-stone-950" />
-           </div>
-        </div>
-        <h2 className="text-3xl font-black text-white mt-4 italic tracking-tighter">@{viewerHandle}</h2>
+        <h2 className="text-3xl font-black text-white mt-1 italic tracking-tighter">@{viewerHandle}</h2>
         {viewerName && viewerName.toLowerCase() !== viewerHandle.toLowerCase() && (
           <p className="text-sm font-semibold text-stone-300 mt-1">{viewerName}</p>
         )}
@@ -471,7 +465,7 @@ const UserAvatar = ({ name, imageUrl = '', fallbackImageUrl = '', size = "w-12 h
   const initials = name ? name.substring(0, 1).toUpperCase() : '?';
   const proxyFallbackUrl = buildInstagramProxyUrl(name);
   const directFallbackUrl = name ? `https://unavatar.io/instagram/${encodeURIComponent(name)}` : '';
-  const sources = [imageUrl, fallbackImageUrl, proxyFallbackUrl, directFallbackUrl]
+  const sources = [fallbackImageUrl, imageUrl, proxyFallbackUrl, directFallbackUrl]
     .map((url) => (typeof url === 'string' ? url.trim() : ''))
     .filter(Boolean)
     .filter((url, index, arr) => arr.indexOf(url) === index);
@@ -496,7 +490,7 @@ const UserAvatar = ({ name, imageUrl = '', fallbackImageUrl = '', size = "w-12 h
         <img
           src={currentSrc}
           alt={name}
-          className={`w-full h-full object-cover relative z-10 transition-all duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          className={`w-full h-full object-contain bg-stone-900 relative z-10 transition-all duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}
           loading="lazy"
           crossOrigin="anonymous"
           referrerPolicy="no-referrer"
