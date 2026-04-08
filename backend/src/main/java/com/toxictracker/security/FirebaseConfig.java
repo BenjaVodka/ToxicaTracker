@@ -25,12 +25,14 @@ public class FirebaseConfig {
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseOptions options;
 
-                if (firebaseConfigJson != null && !firebaseConfigJson.isEmpty()) {
+                if (firebaseConfigJson != null && !firebaseConfigJson.trim().isEmpty()) {
+                    String sanitizedJson = firebaseConfigJson.trim();
+                    log.info("Inicializando Firebase con JSON de tamaño: {} bytes", sanitizedJson.length());
                     options = FirebaseOptions.builder()
                             .setCredentials(GoogleCredentials.fromStream(
-                                    new ByteArrayInputStream(firebaseConfigJson.getBytes(StandardCharsets.UTF_8))))
+                                    new ByteArrayInputStream(sanitizedJson.getBytes(StandardCharsets.UTF_8))))
                             .build();
-                    log.info("Firebase Admin SDK inicializado con JSON de entorno.");
+                    log.info("Firebase Admin SDK inicializado con éxito.");
                 } else {
                     // Fallback a credenciales por defecto (útil si se corre en GCP)
                     options = FirebaseOptions.builder()
