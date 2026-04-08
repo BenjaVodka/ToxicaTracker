@@ -60,6 +60,7 @@ const ShareCard = ({ results }) => {
     .replace(/^@/, '')
     .split('@')[0]
     .replace(/\s+/g, '') || 'usuario';
+  const viewerName = String(results.fullName || auth.currentUser?.displayName || '').trim();
   const viewerPhotoUrl = results.profilePhotoUrl || auth.currentUser?.photoURL || '';
   
   const getTheme = (s) => {
@@ -153,6 +154,9 @@ const ShareCard = ({ results }) => {
            </div>
         </div>
         <h2 className="text-3xl font-black text-white mt-4 italic tracking-tighter">@{viewerHandle}</h2>
+        {viewerName && viewerName.toLowerCase() !== viewerHandle.toLowerCase() && (
+          <p className="text-sm font-semibold text-stone-300 mt-1">{viewerName}</p>
+        )}
         <div className={`mt-2 px-4 py-1 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white text-[8px] font-black uppercase tracking-[0.2em]`}>
            Informe de Salud Social 🔒
         </div>
@@ -904,10 +908,13 @@ export default function App() {
 
       // Verificamos que el mensaje provenga de nuestra propia ventana/extension
       if (event.data.type === MESSAGE_TYPES.extensionData) {
-        const { followers, following } = event.data.payload || {};
+        const { followers, following, owner } = event.data.payload || {};
         if (!Array.isArray(followers) || !Array.isArray(following)) {
           return;
         }
+        const ownerUsername = typeof owner?.username === 'string' ? owner.username.trim() : '';
+        const ownerFullName = typeof owner?.full_name === 'string' ? owner.full_name.trim() : '';
+        const ownerProfilePhoto = typeof owner?.pic === 'string' ? owner.pic.trim() : '';
 
         // Ejecutamos el algoritmo matematico localmente (Cero servidores, 100% privado)
         const followersUsernames = followers.map(f => f.username);
@@ -935,6 +942,9 @@ export default function App() {
         setLoading(false);
         setResults({
           message: lostFollowers.length > 0 || notFollowingBack.length > 0 ? "Se prendio esto! Hay drama." : "Todo tranqui por ahora.",
+          username: ownerUsername || auth.currentUser?.displayName || auth.currentUser?.email || 'usuario',
+          fullName: ownerFullName || ownerUsername || auth.currentUser?.displayName || '',
+          profilePhotoUrl: ownerProfilePhoto || auth.currentUser?.photoURL || '',
           followersCount: followers.length,
           followingCount: following.length,
           notFollowingBack,
