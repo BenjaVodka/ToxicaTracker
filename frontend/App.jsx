@@ -271,14 +271,14 @@ const UserList = ({ title = "", users = [], count = 0, variantSet = "success", t
               
               <button 
                 onClick={() => onUnfollow ? onUnfollow(u) : window.open(`https://www.instagram.com/${u}/`, '_blank')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`p-3 rounded-xl transition-all ${
                   isDanger 
-                    ? (turboMode ? 'bg-rose-500 text-white shadow-lg scale-105' : 'bg-white/5 text-stone-400 hover:bg-red-500 hover:text-white') 
+                    ? (turboMode ? 'bg-rose-500 text-white shadow-lg scale-110 shadow-rose-500/20' : 'bg-white/5 text-stone-400 hover:bg-red-500 hover:text-white') 
                     : 'bg-white/5 text-stone-400 hover:bg-toxic hover:text-white'
                 }`}
+                title={isDanger ? (turboMode ? 'Auto-Unfollow' : 'Ver Perfil') : 'Ver Perfil'}
               >
-                {isDanger && turboMode ? <Zap className="w-3 h-3" /> : <Instagram className="w-3 h-3" />}
-                {isDanger ? (turboMode ? 'AUTO' : 'VER PERFIL') : 'VER PERFIL'}
+                {isDanger && turboMode ? <Zap className="w-4 h-4 fill-current" /> : <Instagram className="w-4 h-4" />}
               </button>
             </div>
           ))
