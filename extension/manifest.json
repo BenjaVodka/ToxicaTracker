@@ -25,7 +25,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["http://localhost:5173/*", "https://*.vercel.app/*", "https://toxicatracker.vercel.app/*"],
+      "matches": ["http://localhost:5173/*", "https://toxicatracker.vercel.app/*"],
       "js": ["inject.js"],
       "run_at": "document_idle"
     },
