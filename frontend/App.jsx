@@ -208,7 +208,7 @@ const ShareDialog = ({ results, onClose }) => {
   );
 };
 
-const Nav = ({ token, results, handleLogout, onLoginClick }) => (
+const Nav = ({ token, results, handleLogout, onLoginClick, checkingHistory }) => (
   <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/10">
     <div className="container mx-auto px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-2">
@@ -229,7 +229,8 @@ const Nav = ({ token, results, handleLogout, onLoginClick }) => (
             }} 
             className="hidden md:flex items-center gap-2 text-toxic font-black text-xs uppercase tracking-widest hover:text-white transition-colors"
           >
-            <BarChart2 className="w-4 h-4" /> Mis Reportes
+            {checkingHistory ? <Loader2 className="w-4 h-4 animate-spin" /> : <BarChart2 className="w-4 h-4" />} 
+            {checkingHistory ? 'Cargando...' : 'Mis Reportes'}
           </button>
           <button onClick={handleLogout} className="bg-white/10 hover:bg-red-500/20 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all border border-transparent hover:border-red-500/50 flex items-center gap-2">
             Cerrar Sesión
@@ -1069,6 +1070,7 @@ export default function App() {
         results={results}
         handleLogout={handleLogout} 
         onLoginClick={() => setShowAuth(true)} 
+        checkingHistory={checkingHistory}
       />
       
       <AnimatePresence>
