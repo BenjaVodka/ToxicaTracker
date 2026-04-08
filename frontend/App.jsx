@@ -181,71 +181,98 @@ const MetricCard = ({ icon, label, value, subLabel, highlight }) => (
   </div>
 )
 
-const UserList = ({ title, users, count, variantSet = "toxic" }) => (
-  <div className="glass rounded-[2rem] border-white/5 overflow-hidden flex flex-col h-full">
-    <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-      <h3 className="font-bold text-lg">{title}</h3>
-      <span className={`px-4 py-1 rounded-full text-xs font-black ${
-        variantSet === 'danger' ? 'bg-red-500/20 text-red-500' : 
-        variantSet === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 
-        'bg-toxic/20 text-toxic'
-      }`}>
-        {count}
-      </span>
-    </div>
-    <div className="flex-1 overflow-y-auto custom-scrollbar max-h-[500px]">
-      {users.length > 0 ? (
-        <div className="divide-y divide-white/5">
-          {users.map((user) => (
-            <div key={user} className="group p-5 flex items-center justify-between hover:bg-white/[0.03] transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl overflow-hidden glass border border-white/10 flex-shrink-0 group-hover:scale-105 transition-transform bg-dark-800 flex items-center justify-center font-black text-toxic relative">
-                   <div 
-                    className="absolute inset-0 flex items-center justify-center text-xl uppercase"
-                    style={{
-                      background: `linear-gradient(135deg, ${['#ff0080', '#7928ca', '#0070f3', '#f5a623', '#4ade80'][user.length % 5]}22, transparent)`
-                    }}
-                   >
-                    {user[0]}
-                   </div>
-                   <img 
-                    src={`https://unavatar.io/instagram/${user}?fallback=false`} 
-                    alt={user}
-                    className="w-full h-full object-cover relative z-10"
-                    loading="lazy"
-                    onError={(e) => { e.target.style.opacity = '0'; }}
-                  />
-                </div>
-                <div>
-                  <p className="font-black text-stone-100 group-hover:text-toxic transition-colors tracking-tight">@{user}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                     <span className="w-1.5 h-1.5 rounded-full bg-toxic/40" />
-                     <p className="text-[10px] text-stone-500 uppercase font-black tracking-widest">Cuenta Activa</p>
+const UserList = ({ title, users, count, variantSet = "toxic" }) => {
+  const [search, setSearch] = React.useState('');
+  
+  const filteredUsers = users.filter(u => u.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="glass rounded-[2rem] border-white/5 overflow-hidden flex flex-col h-full group/list">
+      <div className="p-8 border-b border-white/5 bg-white/[0.02] flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-lg">{title}</h3>
+          <span className={`px-4 py-1 rounded-full text-xs font-black ${
+            variantSet === 'danger' ? 'bg-red-500/20 text-red-500' : 
+            variantSet === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 
+            'bg-toxic/20 text-toxic'
+          }`}>
+            {count}
+          </span>
+        </div>
+        
+        {/* Search Bar */}
+        <div className="relative">
+          <input 
+            type="text" 
+            placeholder={`Buscar en ${title.split(' ')[0]}...`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-toxic/50 outline-none transition-all placeholder:text-stone-600"
+          />
+          <div className="absolute right-3 top-2.5 text-stone-600">
+            <BarChart2 className="w-4 h-4" />
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto custom-scrollbar max-h-[500px]">
+        {filteredUsers.length > 0 ? (
+          <div className="divide-y divide-white/5">
+            {filteredUsers.map((user) => (
+              <div key={user} className="group p-5 flex items-center justify-between hover:bg-white/[0.03] transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl overflow-hidden glass border border-white/10 flex-shrink-0 group-hover:scale-105 transition-transform bg-dark-800 flex items-center justify-center font-black text-toxic relative">
+                     <div 
+                      className="absolute inset-0 flex items-center justify-center text-xl uppercase"
+                      style={{
+                        background: `linear-gradient(135deg, ${['#ff0080', '#7928ca', '#0070f3', '#f5a623', '#4ade80'][user.length % 5]}22, transparent)`
+                      }}
+                     >
+                      {user[0]}
+                     </div>
+                     <img 
+                      src={`https://unavatar.io/instagram/${user}?fallback=false`} 
+                      alt={user}
+                      className="w-full h-full object-cover relative z-10"
+                      loading="lazy"
+                      onError={(e) => { e.target.style.opacity = '0'; }}
+                    />
+                  </div>
+                  <div>
+                    <p className="font-black text-stone-100 group-hover:text-toxic transition-colors tracking-tight">@{user}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                       <span className="w-1.5 h-1.5 rounded-full bg-toxic/40" />
+                       <p className="text-[10px] text-stone-500 uppercase font-black tracking-widest">Ver Perfil</p>
+                    </div>
                   </div>
                 </div>
+                <a 
+                  href={`https://instagram.com/${user}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  title="Abrir perfil para dejar de seguir"
+                  className="p-3 bg-white/5 rounded-xl hover:bg-toxic hover:text-white transition-all transform group-hover:translate-x-1 flex items-center gap-2"
+                >
+                  <Instagram className="w-4 h-4" />
+                  <span className="text-[10px] font-bold uppercase hidden group-hover:inline">Unfollow</span>
+                </a>
               </div>
-              <a 
-                href={`https://instagram.com/${user}`} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="p-3 bg-white/5 rounded-xl hover:bg-toxic hover:text-white transition-all transform group-hover:translate-x-1"
-              >
-                <Instagram className="w-4 h-4" />
-              </a>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="p-20 text-center space-y-4">
-          <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+            ))}
           </div>
-          <p className="text-stone-400 font-medium">¡Sin traidores a la vista!</p>
-        </div>
-      )}
+        ) : (
+          <div className="p-20 text-center space-y-4">
+            <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto">
+              {search ? <AlertCircle className="w-10 h-10 text-stone-600" /> : <CheckCircle2 className="w-10 h-10 text-emerald-500" />}
+            </div>
+            <p className="text-stone-400 font-medium">
+              {search ? 'No se encontraron coincidencias' : '¡Sin traidores a la vista!'}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-)
+  );
+};
 
 const HowItWorks = () => (
   <section id="how-it-works" className="py-24 relative overflow-hidden">
@@ -366,6 +393,40 @@ export default function App() {
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
   const [checkingHistory, setCheckingHistory] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [showShareCard, setShowShareCard] = useState(false);
+
+  const ToxicityTimeline = ({ data }) => {
+    if (!data || data.length < 2) return null;
+    
+    // Sort by date (already sorted from backend, but just in case)
+    const sortedData = [...data].reverse(); 
+    const points = sortedData.map(d => d.toxicScore);
+    const max = Math.max(...points, 10);
+    const min = Math.min(...points);
+    
+    const width = 200;
+    const height = 40;
+    const padding = 5;
+    
+    const d = sortedData.map((p, i) => {
+      const x = (i / (sortedData.length - 1)) * (width - padding * 2) + padding;
+      const y = height - ((p.toxicScore / max) * (height - padding * 2) + padding);
+      return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+    }).join(' ');
+
+    return (
+      <div className="flex flex-col items-end">
+        <svg width={width} height={height} className="overflow-visible">
+          <path d={d} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-toxic drop-shadow-[0_0_8px_rgba(255,0,128,0.5)]" />
+        </svg>
+        <div className="flex justify-between w-full mt-2 text-[8px] font-black text-stone-500 uppercase tracking-widest">
+           <span>Pasado</span>
+           <span>Hoy</span>
+        </div>
+      </div>
+    );
+  };
   
   // Modificado: Escuchar eventos de la extension
   React.useEffect(() => {
@@ -470,38 +531,23 @@ export default function App() {
       setCheckingHistory(true);
       setError(null);
 
-      // Timeout de 12 segundos para no dejar al usuario bloqueado
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
         controller.abort();
         setCheckingHistory(false);
-        setError("El servidor de la nube está despertando (Render cold start). Por favor, refresca la página en 30 segundos. ⏱️");
+        setError("El servidor de la nube está despertando (Render cold start). Por favor, espera unos segundos. ⏱️");
       }, 50000);
 
-      console.log("🔍 Intentando recuperar historial...");
-      console.log("🔗 URL Backend:", API_BASE_URL);
-      console.log("🔑 Token presente:", !!token);
-
+      // Fetch Latest Results
       fetch(`${API_BASE_URL}/api/analysis/latest`, {
         headers: { 'Authorization': `Bearer ${token}` },
         signal: controller.signal
       })
-      .then(async res => {
-        clearTimeout(timeoutId);
-        if (res.status === 200) return res.json();
-        if (res.status === 403 || res.status === 401) {
-          const errorData = await res.json().catch(() => ({}));
-          handleLogout();
-          throw new Error(`[Error ${res.status}] ${errorData.error || "Sesión rechazada por el servidor."}`);
-        }
-        if (res.status === 204 || res.status === 404) return null; // No hay historial aún
-        return null;
-      })
+      .then(res => res.status === 200 ? res.json() : null)
       .then(data => {
-        setCheckingHistory(false);
         if (data) {
           setResults({
-            message: "Datos recuperados de la nube ☁️",
+            message: "Tu Informe Tóxico está listo 🕵️‍♂️🔥",
             followersCount: data.followersCount,
             followingCount: data.followingCount,
             notFollowingBack: data.notFollowingMeBack || [], 
@@ -511,14 +557,20 @@ export default function App() {
             mutualityRate: data.mutualityRate || 0,
             isFromCloud: true
           });
-          window.resultsLoaded = true;
         }
       })
-      .catch(err => {
-        if (err.name === 'AbortError') return; 
-        console.error("Error cargando historial:", err);
-        setError(err.message || "Error desconocido al conectar con la nube.");
+      .catch(() => {});
+
+      // Fetch History for Chart
+      fetch(`${API_BASE_URL}/api/analysis/history`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        signal: controller.signal
       })
+      .then(res => res.status === 200 ? res.json() : null)
+      .then(data => {
+        if (data) setHistory(data);
+      })
+      .catch(() => {})
       .finally(() => {
         clearTimeout(timeoutId);
         setCheckingHistory(false);
@@ -856,10 +908,97 @@ export default function App() {
                   </div>
                   <p className="text-stone-400">Análisis completado. Tu chisme está a salvo. 🔒</p>
                 </div>
-                <button onClick={() => setResults(null)} className="glass px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-white/10 transition-all">
-                  <ArrowRight className="w-4 h-4 rotate-180" /> Nuevo reporte
-                </button>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setShowShareCard(true)}
+                    className="glass px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 bg-toxic/10 border-toxic/20 text-toxic hover:bg-toxic/20 transition-all"
+                  >
+                    <Sparkles className="w-4 h-4" /> Compartir en IG
+                  </button>
+                  <button onClick={() => setResults(null)} className="glass px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-white/10 transition-all">
+                    <ArrowRight className="w-4 h-4 rotate-180" /> Nuevo reporte
+                  </button>
+                </div>
               </div>
+
+              <AnimatePresence>
+                {showShareCard && (
+                  <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-xl p-4 flex items-center justify-center overflow-y-auto"
+                  >
+                    <button onClick={() => setShowShareCard(false)} className="absolute top-6 right-6 text-white/50 hover:text-white z-[210]">✕ Cerrar</button>
+                    
+                    <motion.div 
+                      initial={{ scale: 0.9, y: 20 }}
+                      animate={{ scale: 1, y: 0 }}
+                      className="bg-black border border-white/10 rounded-[2.5rem] w-full max-w-[380px] aspect-[9/16] relative overflow-hidden shadow-2xl flex flex-col p-10 font-sans"
+                      id="share-card"
+                    >
+                      {/* Decorative Background */}
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-toxic/20 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+                      <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2" />
+                      
+                      <div className="relative z-10 flex flex-col h-full">
+                        <div className="flex items-center gap-2 mb-12">
+                          <HeartCrack className="w-8 h-8 text-toxic" />
+                          <span className="font-extrabold text-xl tracking-tighter">Tóxica<span className="text-toxic">Tracker</span></span>
+                        </div>
+
+                        <div className="flex-1 space-y-8">
+                          <div>
+                            <p className="text-[10px] uppercase font-black tracking-[0.3em] text-stone-500 mb-2">Mi Nivel de Toxicidad</p>
+                            <h2 className="text-7xl font-black text-toxic tracking-tighter leading-none">{results.toxicScore}%</h2>
+                            <div className="h-1 bg-white/5 w-full mt-4 rounded-full overflow-hidden">
+                              <div className="h-full bg-toxic" style={{ width: `${results.toxicScore}%` }} />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                              <p className="text-[8px] uppercase font-black text-stone-500 mb-1">Tóxicos</p>
+                              <p className="text-2xl font-black text-white">{results.notFollowingBack.length}</p>
+                            </div>
+                            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                              <p className="text-[8px] uppercase font-black text-stone-500 mb-1">Fans</p>
+                              <p className="text-2xl font-black text-white">{results.followersCount}</p>
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-[10px] uppercase font-black tracking-widest text-toxic mb-4">Top Traidores 🕵️‍♂️🔥</p>
+                            <div className="space-y-3">
+                              {results.notFollowingBack.slice(0, 5).map(u => (
+                                <div key={u} className="flex items-center gap-3">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-toxic" />
+                                  <p className="font-bold text-sm text-stone-300">@{u}</p>
+                                </div>
+                              ))}
+                              {results.notFollowingBack.length > 5 && (
+                                <p className="text-[10px] text-stone-500 font-bold pl-4">Y {results.notFollowingBack.length - 5} personas más...</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-8 pt-8 border-t border-white/10 text-center">
+                          <div className="flex items-center justify-center gap-2 bg-emerald-500/10 border border-emerald-500/20 py-3 rounded-2xl mb-4">
+                             <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                             <span className="text-[10px] font-black uppercase text-emerald-500 tracking-widest">Análisis 100% Seguro</span>
+                          </div>
+                          <p className="text-[8px] text-stone-500 uppercase font-black tracking-widest">Web: toxicatracker.vercel.app</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                    
+                    <div className="absolute bottom-10 flex flex-col items-center gap-4">
+                       <p className="text-white/60 text-sm font-medium">Sacar captura de pantalla para subir a Stories 📸</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Advanced Metrics Grid */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
@@ -878,9 +1017,12 @@ export default function App() {
                 />
                 <div className="glass p-8 rounded-3xl border-white/5 flex flex-col items-center justify-center text-center relative overflow-hidden group">
                   <div className="absolute inset-0 bg-toxic/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <p className="text-xs text-stone-400 uppercase font-black tracking-tighter mb-2">Toxic Score</p>
-                  <div className="text-4xl font-black text-toxic mb-1">{results.toxicScore}%</div>
-                  <div className="w-full bg-white/5 h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div className="w-full flex justify-between items-start mb-2 relative z-10">
+                    <p className="text-xs text-stone-400 uppercase font-black tracking-tighter">Toxic Score</p>
+                    <ToxicityTimeline data={history} />
+                  </div>
+                  <div className="text-4xl font-black text-toxic mb-1 relative z-10">{results.toxicScore}%</div>
+                  <div className="w-full bg-white/5 h-1.5 rounded-full mt-2 overflow-hidden relative z-10">
                     <motion.div 
                       initial={{ width: 0 }} 
                       animate={{ width: `${results.toxicScore}%` }} 

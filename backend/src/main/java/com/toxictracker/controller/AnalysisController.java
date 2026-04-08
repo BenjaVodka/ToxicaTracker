@@ -81,4 +81,14 @@ public class AnalysisController {
             return ResponseEntity.badRequest().body("Error al recuperar historial: " + e.getMessage());
         }
     }
+
+    @GetMapping("/history")
+    public ResponseEntity<?> getHistory(org.springframework.security.core.Authentication authentication) {
+        try {
+            AppUser user = (AppUser) authentication.getPrincipal();
+            return ResponseEntity.ok(analysisService.getHistory(user));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al recuperar línea de tiempo: " + e.getMessage());
+        }
+    }
 }
