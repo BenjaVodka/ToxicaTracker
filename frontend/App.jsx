@@ -53,11 +53,40 @@ const ShareOption = ({ icon, label, onClick, disabled = false, highlight = false
 );
 
 const ShareCard = ({ results }) => {
+  const score = results.toxicScore;
+  
+  // Motor de Temas Dinámicos ✨
+  const getTheme = (s) => {
+    if (s >= 70) return { 
+      primary: "text-red-500", 
+      border: "border-red-500/20", 
+      bg: "bg-red-500/10", 
+      mesh: "from-red-600/40 via-stone-950 to-purple-900/40",
+      accent: "from-red-500 to-rose-600"
+    };
+    if (s >= 40) return { 
+      primary: "text-amber-500", 
+      border: "border-amber-500/20", 
+      bg: "bg-amber-500/10", 
+      mesh: "from-amber-600/40 via-stone-950 to-orange-900/40",
+      accent: "from-amber-500 to-yellow-600"
+    };
+    return { 
+      primary: "text-emerald-500", 
+      border: "border-emerald-500/20", 
+      bg: "bg-emerald-500/10", 
+      mesh: "from-emerald-600/40 via-stone-950 to-teal-900/40",
+      accent: "from-emerald-400 to-cyan-500"
+    };
+  };
+
+  const theme = getTheme(score);
+
   const getToxicityDiagnosis = (res) => {
-    if (!res) return { text: "No hay datos", emoji: "❓", title: "N/A", color: "text-stone-500", bg: "bg-stone-500/10", border: "border-stone-500/20" };
-    const score = res.toxicScore;
+    if (!res) return { text: "No hay datos", emoji: "❓", color: "text-stone-500", bg: "bg-stone-500/10", border: "border-stone-500/20" };
     const country = (res.country || 'global').toLowerCase();
     
+    // Diccionario de Sarcasmo Localizado 🌎
     const localizedQuotes = {
       chile: {
         ultra: "Tu cuenta es terrible penca po. Está llena de weones fomes que no te siguen. 🚩",
@@ -81,10 +110,10 @@ const ShareCard = ({ results }) => {
 
     const quotes = localizedQuotes[country] || localizedQuotes.global;
 
-    if (score >= 90) return { emoji: "☢️", text: quotes.ultra, bg: "bg-red-500/10", border: "border-red-500/20", color: "text-red-500" };
-    if (score >= 70) return { emoji: "🕵️‍♂️", text: quotes.high, bg: "bg-rose-500/10", border: "border-rose-500/20", color: "text-rose-500" };
-    if (score >= 40) return { emoji: "🧐", text: quotes.mid, bg: "bg-amber-500/10", border: "border-amber-500/20", color: "text-amber-500" };
-    return { emoji: "🌱", text: quotes.low, bg: "bg-emerald-500/10", border: "border-emerald-500/20", color: "text-emerald-500" };
+    if (score >= 90) return { emoji: "☢️", text: quotes.ultra };
+    if (score >= 70) return { emoji: "🕵️‍♂️", text: quotes.high };
+    if (score >= 40) return { emoji: "🧐", text: quotes.mid };
+    return { emoji: "🌱", text: quotes.low };
   };
 
   const diag = getToxicityDiagnosis(results);
@@ -92,42 +121,82 @@ const ShareCard = ({ results }) => {
   return (
     <div 
       id="toxic-share-card"
-      className="w-[390px] h-[693px] bg-stone-950 px-8 py-12 flex flex-col relative overflow-hidden"
+      className="w-[1080px] h-[1920px] bg-stone-950 flex flex-col relative overflow-hidden"
     >
-      <div className={`absolute top-0 right-0 w-64 h-64 blur-[100px] rounded-full opacity-30 ${diag.bg}`} />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-toxic/10 blur-[100px] rounded-full" />
+      {/* Mesh Gradient Animado (Solo en el render de imagen se queda estático) */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${theme.mesh} opacity-80`} />
+      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-white/5 blur-[250px] rounded-full" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-toxic/10 blur-[200px] rounded-full" />
       
-      <div className="relative z-10 mb-8">
-        <div className="flex items-center gap-2 mb-1">
-          <Zap className="w-5 h-5 text-toxic fill-current" />
-          <span className="text-xl font-black italic tracking-tighter text-white">TOXIC TRACKER</span>
-        </div>
-        <p className="text-[10px] font-black text-stone-500 uppercase tracking-[0.3em]">Análisis de Social Health</p>
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center mb-10 mt-4">
-        <UserAvatar name={results.username} size="w-24 h-24" />
-        <h2 className="text-2xl font-black text-white mt-4 italic">@{results.username}</h2>
-        <div className="bg-white/5 border border-white/10 px-4 py-1 rounded-full mt-2 text-toxic text-[10px] font-black uppercase tracking-widest">
-          Resultado Oficial
+      {/* Header Container */}
+      <div className="relative z-10 px-20 pt-24 mb-32">
+        <div className="flex items-center gap-6 mb-4">
+          <div className={`p-4 rounded-3xl bg-gradient-to-tr ${theme.accent} shadow-2xl`}>
+             <Zap className="w-16 h-16 text-stone-950 fill-current" />
+          </div>
+          <div>
+            <h1 className="text-8xl font-black italic tracking-tighter text-white">TOXIC TRACKER</h1>
+            <p className="text-2xl font-black text-stone-400 uppercase tracking-[0.4em] mt-2">Personal Social Audit</p>
+          </div>
         </div>
       </div>
 
-      <div className="relative z-10 grid grid-cols-2 gap-4 mb-10">
-        <div className="bg-white/5 border border-white/5 p-4 rounded-3xl">
-          <p className="text-[9px] font-black text-stone-500 uppercase tracking-widest mb-1">Score Tóxico</p>
-          <p className="text-3xl font-black text-red-500">{results.toxicScore}%</p>
+      {/* Profile Section */}
+      <div className="relative z-10 flex flex-col items-center mb-32 px-20">
+        <div className="relative p-2 rounded-[4rem] bg-gradient-to-tr transition-all" style={{ backgroundImage: `linear-gradient(to top right, transparent, rgba(255,255,255,0.1))` }}>
+           <UserAvatar name={results.username} size="w-64 h-64" />
+           <div className={`absolute -bottom-4 -right-4 p-5 rounded-3xl bg-gradient-to-tr ${theme.accent} shadow-xl border-8 border-stone-900`}>
+              <CheckCircle2 className="w-10 h-10 text-stone-950" />
+           </div>
         </div>
-        <div className="bg-white/5 border border-white/5 p-4 rounded-3xl">
-          <p className="text-[9px] font-black text-stone-500 uppercase tracking-widest mb-1">Traidores</p>
-          <p className="text-3xl font-black text-white">{results.notFollowingBack.length}</p>
+        <h2 className="text-9xl font-black text-white mt-12 italic tracking-tighter">@{results.username}</h2>
+        <div className={`mt-8 px-12 py-3 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white text-3xl font-black uppercase tracking-[0.2em]`}>
+           Informe de Salud Social 🔒
         </div>
       </div>
 
-      <div className={`relative z-10 p-6 rounded-[2rem] border ${diag.border} ${diag.bg} mb-auto shadow-2xl`}>
-        <div className="flex items-center gap-2 mb-2">
-           <span className="text-xl">{diag.emoji}</span>
-           <span className="text-[9px] font-black uppercase tracking-widest text-stone-300">Diagnóstico IA</span>
+      {/* Metrics Section */}
+      <div className="relative z-10 grid grid-cols-2 gap-12 px-20 mb-32">
+        <div className="glass-premium p-16 rounded-[4rem] border-white/10 bg-white/[0.03] backdrop-blur-3xl">
+          <p className="text-3xl font-black text-stone-400 uppercase tracking-widest mb-4">Toxic Score</p>
+          <div className="flex items-end gap-2">
+            <span className={`text-[12rem] leading-none font-black ${theme.primary} tracking-tight`}>{results.toxicScore}</span>
+            <span className={`text-6xl font-black ${theme.primary} mb-12`}>%</span>
+          </div>
+        </div>
+        <div className="glass-premium p-16 rounded-[4rem] border-white/10 bg-white/[0.03] backdrop-blur-3xl">
+          <p className="text-3xl font-black text-stone-400 uppercase tracking-widest mb-4">Traidores</p>
+          <div className="flex items-end gap-2">
+            <span className="text-[12rem] leading-none font-black text-white tracking-tight">{results.notFollowingBack.length}</span>
+            <UserMinus className="w-20 h-20 text-stone-500 mb-12" />
+          </div>
+        </div>
+      </div>
+
+      {/* Diagnosis Section */}
+      <div className="relative z-10 px-20 mt-auto pb-40">
+        <div className={`p-20 rounded-[5rem] border ${theme.border} bg-white/[0.02] backdrop-blur-3xl relative overflow-hidden group shadow-2xl`}>
+          <div className="absolute top-0 right-0 p-12 opacity-[0.03]">
+             <span className="text-[20rem] leading-none">{diag.emoji}</span>
+          </div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-6 mb-8">
+               <div className={`w-12 h-1 bg-gradient-to-r ${theme.accent} rounded-full`} />
+               <span className="text-3xl font-black uppercase tracking-[0.3em] text-stone-500">Diagnóstico IA</span>
+            </div>
+            <p className="text-7xl font-bold text-white leading-[1.3] italic">
+               "{diag.text}"
+            </p>
+          </div>
+        </div>
+        
+        <div className="mt-20 text-center">
+           <p className="text-3xl font-bold text-stone-500 tracking-widest uppercase opacity-40">ToxicTracker.app • Sin contraseñas</p>
+        </div>
+      </div>
+    </div>
+  );
+};
         </div>
         <p className="text-base font-bold text-white leading-relaxed italic">
           "{diag.text}"
@@ -155,18 +224,27 @@ const ShareDialog = ({ results, onClose }) => {
 
   const handleDownload = async () => {
     setSharing(true);
-    setStatus("Generando tarjeta...");
+    setStatus("Generando tarjeta 4K...");
     try {
       const element = document.querySelector("#toxic-share-card-capture");
       if (!element) throw new Error("Element not found");
-      const canvas = await html2canvas(element, { useCORS: true, allowTaint: false, backgroundColor: "#0c0a09", scale: 2 });
+      
+      const canvas = await html2canvas(element, { 
+        useCORS: true, 
+        allowTaint: false, 
+        backgroundColor: "#0c0a09", 
+        scale: 3, // Resolución Ultra-HD
+        logging: false
+      });
+      
       const link = document.createElement('a');
       link.download = `toxic-tracker-${results.username}.png`;
-      link.href = canvas.toDataURL("image/png");
+      link.href = canvas.toDataURL("image/png", 1.0);
       link.click();
-      setStatus("¡Guardado!");
+      setStatus("¡Guardado en HD!");
       setTimeout(() => setStatus(""), 2000);
     } catch (err) {
+      console.error(err);
       setStatus("Error de captura");
     } finally {
       setSharing(false);
@@ -198,7 +276,9 @@ const ShareDialog = ({ results, onClose }) => {
           )}
 
           <div className="w-full aspect-[9/16] bg-stone-950 rounded-2xl border border-white/5 overflow-hidden relative shadow-inner">
-            <div className="scale-[0.4] origin-top absolute top-0 left-1/2 -translate-x-1/2 shadow-2xl"><ShareCard results={results} /></div>
+            <div className="scale-[0.24] sm:scale-[0.3] origin-top absolute top-0 left-1/2 -translate-x-1/2">
+               <ShareCard results={results} />
+            </div>
             <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-transparent" />
           </div>
         </div>
@@ -367,37 +447,37 @@ const UserAvatar = ({ name, size = "w-12 h-12" }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
-  // Fallback ultra-premium si Instagram bloquea la foto
-  const fallbackUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${name}&backgroundColor=F43F5E,FB7185,E11D48&fontFamily=Arial&fontWeight=bold&fontSize=40`;
+  // Fallback Moderno de Cristal si Instagram falla
+  const initials = name ? name.substring(0, 1).toUpperCase() : '?';
   
-  // URL principal balanceando proxies
   const primaryUrl = `https://unavatar.io/instagram/${name}`;
 
   return (
-    <div className={`${size} rounded-2xl overflow-hidden glass border border-white/10 flex-shrink-0 bg-dark-800 flex items-center justify-center font-black text-white relative group shadow-lg`}>
-      {/* 1. Capa de Iniciales de Respaldo (Solo se ve si no hay foto) */}
-      <img 
-        src={fallbackUrl}
-        alt="fallback"
-        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-0' : 'opacity-100'}`}
-      />
+    <div className={`${size} rounded-2xl overflow-hidden glass border border-white/10 flex-shrink-0 bg-stone-900 flex items-center justify-center relative group`}>
+      {/* 1. Capa de Inicial de Cristal (Fallback Premium) */}
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-white/10 to-transparent backdrop-blur-md">
+           <span className="text-[40%] font-black text-white opacity-40">{initials}</span>
+        </div>
+      )}
 
-      {/* 2. Capa de Imagen Real con Proxy */}
+      {/* 2. Capa de Imagen Real */}
       {!error && (
         <img 
           src={primaryUrl} 
           alt={name}
-          className={`w-full h-full object-cover relative z-10 transition-all duration-700 group-hover:scale-110 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          className={`w-full h-full object-cover relative z-10 transition-all duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}
           loading="lazy"
           onLoad={() => setLoaded(true)}
           onError={() => setError(true)}
         />
       )}
       
-      {/* 3. Indicador de Carga (Shimmer) */}
-      {!loaded && !error && (
-        <div className="absolute inset-0 z-20 animate-pulse bg-white/5" />
-      )}
+      {/* 3. Brillo de Cristal */}
+      <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-tr from-white/5 via-transparent to-white/10" />
+    </div>
+  );
+};
       
       <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl pointer-events-none z-30" />
     </div>
