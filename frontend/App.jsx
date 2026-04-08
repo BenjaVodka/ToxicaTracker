@@ -227,10 +227,12 @@ const UserList = ({ title = "", users = [], count = 0, variantSet = "success", t
         <div className="mb-6 p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between group/turbo">
            <div className="flex items-center gap-3">
              <div className={`w-2 h-2 rounded-full ${turboMode ? 'bg-rose-500 animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'bg-stone-600'}`} />
-             <div>
-               <p className="text-[10px] font-black uppercase tracking-widest text-white">Modo Limpieza Turbo</p>
-               <p className="text-[9px] text-stone-500 font-bold italic">La extensión lo hace por ti</p>
-             </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white">Modo Limpieza Turbo (Auto-Unfollow)</p>
+                <p className="text-[9px] text-stone-500 font-bold leading-relaxed max-w-[180px]">
+                  La extensión dará unfollow automáticamente abriendo pestañas breves con pausas de seguridad.
+                </p>
+              </div>
            </div>
            <button 
             onClick={() => setTurboMode(!turboMode)}
