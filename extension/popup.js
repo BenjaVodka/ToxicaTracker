@@ -59,14 +59,30 @@ document.getElementById('startBtn').addEventListener('click', async () => {
 
 async function scrapeInstagram() {
     try {
-        const match = document.cookie.match(/ds_user_id=(\d+)/);
-        if (!match) {
+        const cookies = Object.fromEntries(
+            document.cookie
+                .split(';')
+                .map((part) => part.trim())
+                .filter(Boolean)
+                .map((part) => {
+                    const splitIndex = part.indexOf('=');
+                    if (splitIndex === -1) return [part, ''];
+                    const key = part.slice(0, splitIndex).trim();
+                    const value = part.slice(splitIndex + 1).trim();
+                    return [key, value];
+                })
+        );
+
+        const userId = cookies.ds_user_id || '';
+        const cookieUsernameRaw = cookies.ds_user || '';
+        const cookieUsername = decodeURIComponent(cookieUsernameRaw).trim();
+
+        if (!userId) {
             return { error: 'No se encontro sesion. Inicia sesion en Instagram desde el navegador.' };
         }
 
-        const userId = match[1];
         const appId = '936619743392459';
-        const csrfToken = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/) || [])[1] || '';
+        const csrfToken = cookies.csrftoken || '';
 
         const baseHeaders = {
             'X-IG-App-ID': appId,
@@ -74,19 +90,33 @@ async function scrapeInstagram() {
             ...(csrfToken ? { 'X-CSRFToken': decodeURIComponent(csrfToken) } : {})
         };
 
+        async function fetchJson(url, extraHeaders = {}) {
+            const res = await fetch(url, {
+                headers: { ...baseHeaders, ...extraHeaders },
+                credentials: 'include'
+            });
+            if (!res.ok) return null;
+            try {
+                return await res.json();
+            } catch (_) {
+                return null;
+            }
+        }
+
         async function fetchOwnProfile() {
             const candidates = [
+                ...(cookieUsername
+                    ? [`https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(cookieUsername)}`]
+                    : []),
                 'https://www.instagram.com/api/v1/accounts/current_user/?edit=true',
                 `https://www.instagram.com/api/v1/users/${userId}/info/`
             ];
 
             for (const url of candidates) {
                 try {
-                    const res = await fetch(url, { headers: baseHeaders });
-                    if (!res.ok) continue;
-
-                    const data = await res.json();
-                    const user = data?.user || data;
+                    const data = await fetchJson(url);
+                    if (!data) continue;
+                    const user = data?.data?.user || data?.user || data;
 
                     if (user?.username) {
                         return {
@@ -103,15 +133,19 @@ async function scrapeInstagram() {
             const ogTitle = document.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
             const pageTitle = document.title || '';
             const fromTitle = `${ogTitle} ${pageTitle}`.match(/\(@([a-zA-Z0-9._]+)\)/)?.[1] || '';
+            const fromInstagramUrl =
+                document.querySelector('meta[property="al:ios:url"]')?.getAttribute('content')?.match(/username=([a-zA-Z0-9._]+)/)?.[1] ||
+                '';
+            const fallbackUsername = cookieUsername || fromTitle || fromInstagramUrl || `user_${userId}`;
 
             const fallbackPic =
                 document.querySelector('header img')?.src ||
                 document.querySelector('meta[property="og:image"]')?.getAttribute('content') ||
-                '';
+                `https://unavatar.io/instagram/${encodeURIComponent(fallbackUsername)}`;
 
             return {
-                username: fromTitle || `user_${userId}`,
-                full_name: fromTitle || `user_${userId}`,
+                username: fallbackUsername,
+                full_name: fallbackUsername,
                 pic: fallbackPic
             };
         }
@@ -123,7 +157,10 @@ async function scrapeInstagram() {
 
             while (hasNext) {
                 const url = `https://www.instagram.com/api/v1/friendships/${userId}/${type}/?count=100${maxId ? '&max_id=' + maxId : ''}`;
-                const res = await fetch(url, { headers: baseHeaders });
+                const res = await fetch(url, {
+                    headers: baseHeaders,
+                    credentials: 'include'
+                });
 
                 if (res.status === 429) {
                     await new Promise((r) => setTimeout(r, 3000));
