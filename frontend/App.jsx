@@ -46,7 +46,13 @@ const Nav = ({ token, results, handleLogout, onLoginClick }) => (
               if (results) {
                  document.getElementById('results-section')?.scrollIntoView({behavior: 'smooth'});
               } else {
-                 alert("Buscando tus datos en la nube... Un momento por favor. ☁️");
+                 const resultsSection = document.getElementById('results-header');
+                 if (resultsSection) {
+                   resultsSection.scrollIntoView({behavior: 'smooth'});
+                 } else {
+                   // Si no hay resultados, avisamos de forma sutil
+                   window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                 }
               }
             }} 
             className="hidden md:flex items-center gap-2 text-toxic font-black text-xs uppercase tracking-widest hover:text-white transition-colors"
@@ -468,18 +474,18 @@ export default function App() {
         signal: controller.signal
       })
       .then(async res => {
+        clearTimeout(timeoutId);
         if (res.status === 200) return res.json();
         if (res.status === 403 || res.status === 401) {
           const errorData = await res.json().catch(() => ({}));
           handleLogout();
           throw new Error(`[Error ${res.status}] ${errorData.error || "Sesión rechazada por el servidor."}`);
         }
-        if (res.status >= 500) {
-          throw new Error(`[Error ${res.status}] El servidor de Render ha colapsado o la llave JSON es inválida.`);
-        }
+        if (res.status === 204 || res.status === 404) return null; // No hay historial aún
         return null;
       })
       .then(data => {
+        setCheckingHistory(false);
         if (data) {
           setResults({
             message: "Datos recuperados de la nube ☁️",
