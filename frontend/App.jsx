@@ -24,7 +24,8 @@ import {
   Sparkles,
   BarChart2,
   Download,
-  Share2
+  Share2,
+  Search
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { auth, googleProvider } from './firebase'
