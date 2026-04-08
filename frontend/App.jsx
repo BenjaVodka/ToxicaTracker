@@ -87,22 +87,22 @@ const ShareCard = ({ results }) => {
     
     const localizedQuotes = {
       chile: {
-        ultra: "Tu cuenta es terrible penca po. Está llena de weones fomes que no te siguen. 🚩",
-        high: "Vives al 3 y al 4. Hay pura traición en tu Insta, po. Duerme con un ojo abierto. 💣",
-        mid: "Ni tan santo, ni tan tóxico. Tienes un círculo de amigos... sospechoso, po. 👀",
-        low: "Todo tranqui, po. Pocos traidores, mucha paz. Sigue así, campeón. ✨"
+        ultra: "Tu cuenta es una soberana mierda, aweonao qlo. Te siguen puros bots y puros giles que te odian. 🚩",
+        high: "Vives puro drama, conchetumadre. En tu Instagram hay más traición que en serie turca. 👀",
+        mid: "Pencaaa. Ni tan santo ni tan tóxico, pero igual tienes cara de que te caga medio mundo. 🧐",
+        low: "Pura suerte, weón. No te calientes la cabeza, pero igual sigo pensando que eres un fome qlo. 🌱"
       },
       mexico: {
-        ultra: "¡No mames! Tu cuenta es un desmadre total. Pura gente tóxica te rodea, wey. 🚩",
-        high: "Te traen de bajada. Hay pura traición aquí. ¡Ponte pilas! 💣",
-        mid: "Ni muy muy, ni tan tan. Tienes unos compas... de dudosa procedencia. 👀",
-        low: "Todo bien, carnal. Pura gente leal por aquí. ¡Échale ganas! ✨"
+        ultra: "¡No mames, pinche pendejo! Tu cuenta es un nido de víboras y tú eres el más cabrón de todos. 🚩",
+        high: "Te traen de bajada, pendejazo. Hay puros malvibrosos siguiéndote. ¡Ponte las pilas! 💣",
+        mid: "Ni muy muy, ni tan tan. Pero tu Instagram huele a hipocresía, pinche vato loco. 👀",
+        low: "Suertudote, wey. Pero no te acostumbres, por ahí te anda rondando un pendejo traidor. 🌱"
       },
       global: {
-        ultra: "Tu cuenta es Chernobyl. Tienes traidores infiltrados hasta en la sopa. 🚩",
-        high: "Vives al límite. Hay traición en cada esquina. Duerme con un ojo abierto. 💣",
-        mid: "Ni tan santo, ni tan tóxico. Tienes un círculo de amigos... sospechoso. 👀",
-        low: "Todo tranqui. Pocos traidores, mucha paz. Sigue así, campeón. ✨"
+        ultra: "Your account is pure trash, loser. You are surrounded by fake bastards who hate your guts. 🚩",
+        high: "Total disaster. Betrayal is everywhere. You should probably delete this shitty account. 💣",
+        mid: "Meh. Half of your circle is fake, and the other half probably talks behind your back. 👀",
+        low: "Lucky bastard. Stay clean for now, but don't get too comfortable, piece of work. 🌱"
       }
     };
 
