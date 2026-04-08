@@ -488,9 +488,15 @@ export default function App() {
         }
       })
       .catch(err => {
-        if (err.name === 'AbortError') return; // Manejado por el timeout
+        if (err.name === 'AbortError') return; 
         console.error("Error cargando historial:", err);
-        setError(`Error de conexión con la nube: ${err.message}. Verifica que VITE_API_BASE_URL sea correcta.`);
+        
+        // Si el error indica un problema de token
+        if (err.message && (err.message.includes("Token") || err.message.includes("401"))) {
+           setError("Tu sesión o llave de Firebase no coinciden. Revisa si pegaste bien el JSON en Render. 🔑");
+        } else {
+           setError(`Error de conexión con la nube: ${err.message}. Verifica que VITE_API_BASE_URL sea correcta.`);
+        }
       })
       .finally(() => {
         clearTimeout(timeoutId);

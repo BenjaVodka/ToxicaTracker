@@ -56,6 +56,10 @@ public class FirebaseAuthenticationFilter extends OncePerRequestFilter {
                 }
             } catch (Exception e) {
                 log.error("Error validando token de Firebase: {}", e.getMessage());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\": \"Token inválido o expirado: " + e.getMessage() + "\"}");
+                return; // Detenemos la cadena aquí para que no llegue al controlador
             }
         }
 
