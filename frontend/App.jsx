@@ -468,7 +468,10 @@ export default function App() {
         if (res.status === 403 || res.status === 401) {
           const errorData = await res.json().catch(() => ({}));
           handleLogout();
-          throw new Error(errorData.error || "Tu sesión ha caducado. Por favor, entra de nuevo.");
+          throw new Error(`[Error ${res.status}] ${errorData.error || "Sesión rechazada por el servidor."}`);
+        }
+        if (res.status >= 500) {
+          throw new Error(`[Error ${res.status}] El servidor de Render ha colapsado o la llave JSON es inválida.`);
         }
         return null;
       })
