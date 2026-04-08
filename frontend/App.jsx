@@ -185,25 +185,46 @@ const MetricCard = ({ icon, label, value, subLabel, highlight }) => (
   </div>
 )
 
-const AvatarFallback = ({ name }) => (
-  <div className="w-12 h-12 rounded-2xl overflow-hidden glass border border-white/10 flex-shrink-0 bg-dark-800 flex items-center justify-center font-black text-toxic relative">
-    <div 
-      className="absolute inset-0 flex items-center justify-center text-xl uppercase"
-      style={{
-        background: `linear-gradient(135deg, ${['#ff0080', '#7928ca', '#0070f3', '#f5a623', '#4ade80'][name.length % 5]}22, transparent)`
-      }}
-    >
-      {name[0]}
+const UserAvatar = ({ name, size = "w-12 h-12" }) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  // Fallback ultra-premium si Instagram bloquea la foto
+  const fallbackUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${name}&backgroundColor=F43F5E,FB7185,E11D48&fontFamily=Arial&fontWeight=bold&fontSize=40`;
+  
+  // URL principal balanceando proxies
+  const primaryUrl = `https://unavatar.io/instagram/${name}`;
+
+  return (
+    <div className={`${size} rounded-2xl overflow-hidden glass border border-white/10 flex-shrink-0 bg-dark-800 flex items-center justify-center font-black text-white relative group shadow-lg`}>
+      {/* 1. Capa de Iniciales de Respaldo (Solo se ve si no hay foto) */}
+      <img 
+        src={fallbackUrl}
+        alt="fallback"
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-0' : 'opacity-100'}`}
+      />
+
+      {/* 2. Capa de Imagen Real con Proxy */}
+      {!error && (
+        <img 
+          src={primaryUrl} 
+          alt={name}
+          className={`w-full h-full object-cover relative z-10 transition-all duration-700 group-hover:scale-110 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          loading="lazy"
+          onLoad={() => setLoaded(true)}
+          onError={() => setError(true)}
+        />
+      )}
+      
+      {/* 3. Indicador de Carga (Shimmer) */}
+      {!loaded && !error && (
+        <div className="absolute inset-0 z-20 animate-pulse bg-white/5" />
+      )}
+      
+      <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl pointer-events-none z-30" />
     </div>
-    <img 
-      src={`https://unavatar.io/instagram/${name}?fallback=false`} 
-      alt={name}
-      className="w-full h-full object-cover relative z-10"
-      loading="lazy"
-      onError={(e) => { e.target.style.opacity = '0'; }}
-    />
-  </div>
-)
+  );
+};
 
 const UserList = ({ title = "", users = [], count = 0, variantSet = "success", turboMode = false, setTurboMode = null, onUnfollow = null }) => {
   const [search, setSearch] = useState("");
@@ -259,7 +280,7 @@ const UserList = ({ title = "", users = [], count = 0, variantSet = "success", t
           filtered.map(u => (
             <div key={u} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/5 transition-all group/item">
               <div className="flex items-center gap-4">
-                <AvatarFallback name={u} />
+                <UserAvatar name={u} />
                 <div>
                   <p className="font-bold text-sm text-white transition-colors group-hover/item:text-toxic">@{u}</p>
                   <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
