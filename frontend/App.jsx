@@ -547,10 +547,45 @@ export default function App() {
     const score = res.toxicScore;
     const count = res.notFollowingBack.length;
 
+    const phrases = {
+      nuclear: [
+        `Tienes un ${score}% de toxicidad. Básicamente eres un red flag con patas. Tu cuenta es Chernobyl. 🚩`,
+        `Si la toxicidad fuera oro, serías el hombre más rico del mundo. Tienes ${count} traidores infiltrados. ☢️`,
+        `¿Seguro que no eres un villano de película? Tu círculo social es una zona de desastre. 💀`,
+        `Nivel de radioactividad crítico. Tu perfil brilla en la oscuridad de tanto veneno. 🧨`
+      ],
+      minas: [
+        "Vives al límite. Hay traición en cada esquina. Duerme con un ojo abierto. 💣",
+        "Tienes más drama en tu IG que una novela turca de las 3 de la tarde. 👀",
+        "Ese círculo social parece un juego de Minesweeper. Un paso en falso y... ¡PUM! 💣",
+        "La lealtad en tu cuenta es un mito urbano. Prepárate para el impacto. 🕵️‍♂️"
+      ],
+      sospechas: [
+        "Ni tan santo, ni tan tóxico. Tienes un círculo de amigos... 'interesante'. 👀",
+        "Vigila a los que no te dan like pero ven todas tus historias. Hay espías. 🧐",
+        "Estás en la 'zona gris'. Un poco de drama por aquí, un poco de falsa amistad por allá. ✨",
+        "Tu score dice 40%, pero tu intuición dice que alguien te tiene ganas (y no de las buenas). 🧐"
+      ],
+      jardin: [
+        "Todo tranqui por aquí. Un par de deslices, pero tienes gente leal. ✨",
+        "Eres casi un santo. Solo te falta la aureola y dejar de stalkear a tu ex. 🌱",
+        "Un jardín bien cuidado. Poca maleza, mucha flor. Sigue así, campeón. 🌸",
+        "Tienes pocos traidores, pero asegúrate de que esos pocos no quemen el jardín. 🌱"
+      ],
+      santo: [
+        "Eres un ángel. Te aman más que a la pizza fría. O borraste a todos antes. 😇",
+        "Demasiado perfecto para ser verdad. ¿Seguro que no eres un bot de bondad? ✨",
+        "Nivel de toxicidad 0. Eres la persona más aburrida (o sana) de Internet. 😇",
+        "Si todos fueran como tú, esta app no existiría. Gracias por arruinar el chisme. 💖"
+      ]
+    };
+
+    const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
     if (score >= 90) return { 
       emoji: "☢️", 
       title: "NIVEL: ACCIDENTE NUCLEAR", 
-      text: `Tienes un ${score}% de toxicidad. Tu cuenta es básicamente Chernobyl. ¿Seguro que no eres un villano de película? Tienes ${count} traidores infiltrados. 🚩`,
+      text: getRandom(phrases.nuclear),
       color: "text-red-500",
       bg: "bg-red-500/10",
       border: "border-red-500/20"
@@ -558,7 +593,7 @@ export default function App() {
     if (score >= 70) return { 
       emoji: "🕵️‍♂️", 
       title: "NIVEL: CAMPO DE MINAS", 
-      text: "Vives al límite. Hay traición en cada esquina. Duerme con un ojo abierto (y el otro en esta app). 💣",
+      text: getRandom(phrases.minas),
       color: "text-rose-500",
       bg: "bg-rose-500/10",
       border: "border-rose-500/20"
@@ -566,7 +601,7 @@ export default function App() {
     if (score >= 40) return { 
       emoji: "🧐", 
       title: "NIVEL: SOSPECHAS ALTAS", 
-      text: "Ni tan santo, ni tan tóxico. Tienes un círculo de amigos... interesante. Vigila a los que no te dan like. 👀",
+      text: getRandom(phrases.sospechas),
       color: "text-amber-500",
       bg: "bg-amber-500/10",
       border: "border-amber-500/20"
@@ -574,7 +609,7 @@ export default function App() {
     if (score >= 10) return { 
       emoji: "🌱", 
       title: "NIVEL: JARDÍN SANO", 
-      text: "Todo tranqui por aquí. Un par de deslices, pero tienes gente leal. No dejes que la fama te cambie. ✨",
+      text: getRandom(phrases.jardin),
       color: "text-emerald-500",
       bg: "bg-emerald-500/10",
       border: "border-emerald-500/20"
@@ -582,7 +617,7 @@ export default function App() {
     return { 
       emoji: "😇", 
       title: "NIVEL: SANTO DE INTERNET", 
-      text: "Eres un ángel. Te aman más que a la pizza fría. O quizás borraste a todos antes de hacer el escaneo... 🕵️‍♂️✨",
+      text: getRandom(phrases.santo),
       color: "text-toxic",
       bg: "bg-toxic/10",
       border: "border-toxic/20"
