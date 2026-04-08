@@ -197,26 +197,7 @@ const ShareCard = ({ results }) => {
     </div>
   );
 };
-        </div>
-        <p className="text-base font-bold text-white leading-relaxed italic">
-          "{diag.text}"
-        </p>
-      </div>
 
-      <div className="relative z-10 pt-8 border-t border-white/5 flex items-center justify-between">
-        <div>
-          <p className="text-[10px] font-black text-white">toxicatracker.app</p>
-          <p className="text-[9px] text-stone-500 font-bold">Analiza tu círculo de confianza</p>
-        </div>
-        <div className="w-12 h-12 bg-white rounded-lg p-1">
-           <div className="w-full h-full bg-stone-950 flex items-center justify-center">
-              <Zap className="w-6 h-6 text-toxic" />
-           </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const ShareDialog = ({ results, onClose }) => {
   const [sharing, setSharing] = useState(false);
@@ -475,11 +456,6 @@ const UserAvatar = ({ name, size = "w-12 h-12" }) => {
       
       {/* 3. Brillo de Cristal */}
       <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-tr from-white/5 via-transparent to-white/10" />
-    </div>
-  );
-};
-      
-      <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl pointer-events-none z-30" />
     </div>
   );
 };
