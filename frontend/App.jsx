@@ -199,16 +199,21 @@ const UserList = ({ title, users, count, variantSet = "toxic" }) => (
           {users.map((user) => (
             <div key={user} className="group p-5 flex items-center justify-between hover:bg-white/[0.03] transition-colors">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl overflow-hidden glass border border-white/10 flex-shrink-0 group-hover:scale-105 transition-transform bg-stone-900 flex items-center justify-center font-black text-toxic">
-                   <img 
-                    src={`https://unavatar.io/instagram/${user}`} 
-                    alt={user}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = `<span class="text-xl">${user[0].toUpperCase()}</span>`;
+                <div className="w-12 h-12 rounded-2xl overflow-hidden glass border border-white/10 flex-shrink-0 group-hover:scale-105 transition-transform bg-dark-800 flex items-center justify-center font-black text-toxic relative">
+                   <div 
+                    className="absolute inset-0 flex items-center justify-center text-xl uppercase"
+                    style={{
+                      background: `linear-gradient(135deg, ${['#ff0080', '#7928ca', '#0070f3', '#f5a623', '#4ade80'][user.length % 5]}22, transparent)`
                     }}
+                   >
+                    {user[0]}
+                   </div>
+                   <img 
+                    src={`https://unavatar.io/instagram/${user}?fallback=false`} 
+                    alt={user}
+                    className="w-full h-full object-cover relative z-10"
+                    loading="lazy"
+                    onError={(e) => { e.target.style.opacity = '0'; }}
                   />
                 </div>
                 <div>
