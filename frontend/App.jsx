@@ -661,6 +661,38 @@ const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_
   .replace(/\/+$/, '')
   .replace(/\/api$/, '');
 
+const STORAGE_KEYS = {
+  token: 'toxic_token',
+  session: 'toxic_session',
+  lastFollowers: 'toxic_last_followers'
+};
+
+const MESSAGE_TYPES = {
+  sessionUpdate: 'TOXIC_SESSION_UPDATE',
+  extensionData: 'TOXIC_EXTENSION_DATA',
+  turboUnfollow: 'TOXIC_TURBO_UNFOLLOW'
+};
+
+const getStoredToken = () => (
+  localStorage.getItem(STORAGE_KEYS.token) || localStorage.getItem(STORAGE_KEYS.session)
+);
+
+const setStoredToken = (token) => {
+  localStorage.setItem(STORAGE_KEYS.token, token);
+  localStorage.setItem(STORAGE_KEYS.session, token);
+};
+
+const clearStoredToken = () => {
+  localStorage.removeItem(STORAGE_KEYS.token);
+  localStorage.removeItem(STORAGE_KEYS.session);
+};
+
+const postToSelf = (data) => {
+  window.postMessage(data, window.location.origin);
+};
+
+const authHeaders = (token) => (token ? { 'Authorization': `Bearer ${token}` } : undefined);
+
 export default function App() {
   const [files, setFiles] = useState({ followers: null, following: null });
   const [loading, setLoading] = useState(false);
@@ -678,7 +710,7 @@ export default function App() {
     const igPath = `https://www.instagram.com/${username}/`;
     if (turboMode) {
       // Send command to extension
-      window.postMessage({ type: 'TOXIC_TURBO_UNFOLLOW', username }, window.location.origin);
+      postToSelf({ type: MESSAGE_TYPES.turboUnfollow, username });
     } else {
       // Normal behavior: Open profile
       window.open(igPath, '_blank');
@@ -840,7 +872,7 @@ export default function App() {
       }
 
       // Verificamos que el mensaje provenga de nuestra propia ventana/extension
-      if (event.data.type === 'TOXIC_EXTENSION_DATA') {
+      if (event.data.type === MESSAGE_TYPES.extensionData) {
         const { followers, following } = event.data.payload || {};
         if (!Array.isArray(followers) || !Array.isArray(following)) {
           return;
@@ -856,12 +888,12 @@ export default function App() {
         const idontFollowBack = followersUsernames.filter(u => !followingSet.has(u));
 
         // Para calcular unfollowers (traicioneros en el tiempo), leemos localStorage
-        const previousFollowersRaw = JSON.parse(localStorage.getItem('toxic_last_followers') || '[]');
+        const previousFollowersRaw = JSON.parse(localStorage.getItem(STORAGE_KEYS.lastFollowers) || '[]');
         const previousFollowers = Array.isArray(previousFollowersRaw) ? previousFollowersRaw : [];
         const lostFollowers = previousFollowers.filter(u => !followersSet.has(u));
 
         // Guardamos el estado actual para la proxima vez
-        localStorage.setItem('toxic_last_followers', JSON.stringify(followersUsernames));
+        localStorage.setItem(STORAGE_KEYS.lastFollowers, JSON.stringify(followersUsernames));
 
         // Calculo de metricas adicionales locales
         const mutualsCount = followingUsernames.filter(u => followersSet.has(u)).length;
@@ -882,7 +914,7 @@ export default function App() {
         });
 
         // --- NUEVO: SincronizaciÃ³n con PostgreSQL ---
-        const token = localStorage.getItem('toxic_token') || localStorage.getItem('toxic_session');
+        const token = getStoredToken();
         if (token) {
           fetch(`${API_BASE_URL}/api/analysis/sync`, {
             method: 'POST',
@@ -924,10 +956,9 @@ export default function App() {
         try {
           const jwtToken = await user.getIdToken(true); 
           setToken(jwtToken);
-          localStorage.setItem('toxic_token', jwtToken);
-          localStorage.setItem('toxic_session', jwtToken);
+          setStoredToken(jwtToken);
           // Notificamos a la extensión en tiempo real
-          window.postMessage({ type: 'TOXIC_SESSION_UPDATE', token: jwtToken }, window.location.origin);
+          postToSelf({ type: MESSAGE_TYPES.sessionUpdate, token: jwtToken });
           setLoading(false);
         } catch (err) {
           console.error("Error renovando token:", err);
@@ -935,9 +966,8 @@ export default function App() {
         }
       } else {
         setToken(null);
-        localStorage.removeItem('toxic_token');
-        localStorage.removeItem('toxic_session');
-        window.postMessage({ type: 'TOXIC_SESSION_UPDATE', token: null }, window.location.origin);
+        clearStoredToken();
+        postToSelf({ type: MESSAGE_TYPES.sessionUpdate, token: null });
       }
     });
 
@@ -1000,7 +1030,7 @@ export default function App() {
   // Periodic Global Activity Fetch
   React.useEffect(() => {
     const fetchActivity = () => {
-      fetch(`${API_BASE_URL}/api/activity/latest`, token ? { headers: { 'Authorization': `Bearer ${token}` } } : undefined)
+      fetch(`${API_BASE_URL}/api/activity/latest`, { headers: authHeaders(token) })
         .then(res => res.json())
         .then(data => setGlobalActivity(data))
         .catch(() => {});
@@ -1015,7 +1045,7 @@ export default function App() {
     if (showShareDialog) {
       fetch(`${API_BASE_URL}/api/activity/log-share`, {
         method: 'POST',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : undefined
+        headers: authHeaders(token)
       }).catch(() => {});
     }
   }, [showShareDialog, token]);
@@ -1057,9 +1087,8 @@ export default function App() {
       const result = await signInWithPopup(auth, googleProvider);
       const jwtToken = await result.user.getIdToken();
       setToken(jwtToken);
-      localStorage.setItem('toxic_token', jwtToken);
-      localStorage.setItem('toxic_session', jwtToken);
-      window.postMessage({ type: 'TOXIC_SESSION_UPDATE', token: jwtToken }, window.location.origin);
+      setStoredToken(jwtToken);
+      postToSelf({ type: MESSAGE_TYPES.sessionUpdate, token: jwtToken });
       setShowAuth(false);
       // results se cargará solo por el useEffect de arriba
     } catch (err) {
@@ -1073,9 +1102,8 @@ export default function App() {
   const handleLogout = async () => {
     await signOut(auth);
     setToken(null);
-    localStorage.removeItem('toxic_token');
-    localStorage.removeItem('toxic_session');
-    window.postMessage({ type: 'TOXIC_SESSION_UPDATE', token: null }, window.location.origin);
+    clearStoredToken();
+    postToSelf({ type: MESSAGE_TYPES.sessionUpdate, token: null });
     setResults(null);
   };
 
