@@ -40,6 +40,8 @@ public class FollowersSnapshot {
     private Set<InstagramAccount> following;
 
     private String ipAddress;
+    private String city;
+    private String country;
 
     private LocalDateTime createdAt;
 

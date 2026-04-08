@@ -27,6 +27,7 @@ public class AnalysisService {
     private final FollowersSnapshotRepository snapshotRepository;
     private final com.toxictracker.repository.ActivityLogRepository activityLogRepository;
     private final com.toxictracker.repository.InstagramAccountRepository accountRepository;
+    private final org.springframework.web.client.RestTemplate restTemplate;
 
     public Set<String> parseInstagramJson(MultipartFile file) {
         try {
@@ -107,6 +108,10 @@ public class AnalysisService {
                 .following(followingAccounts)
                 .ipAddress(ipAddress)
                 .build();
+        
+        // Enriquecemos con ubicación solo en DB
+        enrichWithLocation(snapshot, ipAddress);
+
         snapshotRepository.save(snapshot);
 
         // Log Global Activity (Anonymous)
@@ -196,5 +201,19 @@ public class AnalysisService {
                     .username(username)
                     .build()))
         ).collect(Collectors.toSet());
+    }
+
+    private void enrichWithLocation(FollowersSnapshot snapshot, String ip) {
+        if (ip == null || ip.equals("127.0.0.1") || ip.equals("0:0:0:0:0:0:0:1")) return;
+        try {
+            String url = "http://ip-api.com/json/" + ip;
+            Map<String, Object> resp = restTemplate.getForObject(url, Map.class);
+            if (resp != null && "success".equals(resp.get("status"))) {
+                snapshot.setCity((String) resp.get("city"));
+                snapshot.setCountry((String) resp.get("country"));
+            }
+        } catch (Exception e) {
+            log.error("Error al geolocalizar IP {}: {}", ip, e.getMessage());
+        }
     }
 }

@@ -34,7 +34,7 @@ public class AnalysisController {
             Set<String> followers = analysisService.parseInstagramJson(followersFile);
             Set<String> following = analysisService.parseInstagramJson(followingFile);
 
-            AnalysisResponse response = analysisService.analyze(user, followers, following, request.getRemoteAddr());
+            AnalysisResponse response = analysisService.analyze(user, followers, following, getClientIp(request));
 
             return ResponseEntity.ok(response);
 
@@ -56,7 +56,7 @@ public class AnalysisController {
                     user, 
                     syncData.getFollowers(), 
                     syncData.getFollowing(), 
-                    request.getRemoteAddr()
+                    getClientIp(request)
             );
 
             return ResponseEntity.ok(response);
@@ -90,5 +90,13 @@ public class AnalysisController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al recuperar línea de tiempo: " + e.getMessage());
         }
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }
