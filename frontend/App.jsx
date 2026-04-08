@@ -463,11 +463,12 @@ export default function App() {
         headers: { 'Authorization': `Bearer ${token}` },
         signal: controller.signal
       })
-      .then(res => {
+      .then(async res => {
         if (res.status === 200) return res.json();
         if (res.status === 403 || res.status === 401) {
+          const errorData = await res.json().catch(() => ({}));
           handleLogout();
-          throw new Error("Tu sesión ha caducado. Por favor, entra de nuevo.");
+          throw new Error(errorData.error || "Tu sesión ha caducado. Por favor, entra de nuevo.");
         }
         return null;
       })
@@ -490,13 +491,7 @@ export default function App() {
       .catch(err => {
         if (err.name === 'AbortError') return; 
         console.error("Error cargando historial:", err);
-        
-        // Si el error indica un problema de token
-        if (err.message && (err.message.includes("Token") || err.message.includes("401"))) {
-           setError("Tu sesión o llave de Firebase no coinciden. Revisa si pegaste bien el JSON en Render. 🔑");
-        } else {
-           setError(`Error de conexión con la nube: ${err.message}. Verifica que VITE_API_BASE_URL sea correcta.`);
-        }
+        setError(err.message || "Error desconocido al conectar con la nube.");
       })
       .finally(() => {
         clearTimeout(timeoutId);
