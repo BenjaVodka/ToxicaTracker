@@ -20,10 +20,18 @@
   "host_permissions": [
     "*://*.instagram.com/*"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
-      "matches": ["http://localhost:5173/*", "https://*.vercel.app/*"],
+      "matches": ["http://localhost:5173/*", "https://*.vercel.app/*", "https://toxicatracker.vercel.app/*"],
       "js": ["inject.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://*.instagram.com/*"],
+      "js": ["unfollow.js"],
       "run_at": "document_idle"
     }
   ]

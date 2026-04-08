@@ -184,92 +184,104 @@ const MetricCard = ({ icon, label, value, subLabel, highlight }) => (
   </div>
 )
 
-const UserList = ({ title, users, count, variantSet = "toxic" }) => {
-  const [search, setSearch] = React.useState('');
-  
-  const filteredUsers = users.filter(u => u.toLowerCase().includes(search.toLowerCase()));
+const AvatarFallback = ({ name }) => (
+  <div className="w-12 h-12 rounded-2xl overflow-hidden glass border border-white/10 flex-shrink-0 bg-dark-800 flex items-center justify-center font-black text-toxic relative">
+    <div 
+      className="absolute inset-0 flex items-center justify-center text-xl uppercase"
+      style={{
+        background: `linear-gradient(135deg, ${['#ff0080', '#7928ca', '#0070f3', '#f5a623', '#4ade80'][name.length % 5]}22, transparent)`
+      }}
+    >
+      {name[0]}
+    </div>
+    <img 
+      src={`https://unavatar.io/instagram/${name}?fallback=false`} 
+      alt={name}
+      className="w-full h-full object-cover relative z-10"
+      loading="lazy"
+      onError={(e) => { e.target.style.opacity = '0'; }}
+    />
+  </div>
+)
+
+const UserList = ({ title, users, count, variantSet, turboMode, setTurboMode, onUnfollow }) => {
+  const [search, setSearch] = useState("");
+  const filtered = users.filter(u => u.toLowerCase().includes(search.toLowerCase()));
+
+  const isDanger = variantSet === 'danger';
 
   return (
-    <div className="glass rounded-[2rem] border-white/5 overflow-hidden flex flex-col h-full group/list">
-      <div className="p-8 border-b border-white/5 bg-white/[0.02] flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-lg">{title}</h3>
-          <span className={`px-4 py-1 rounded-full text-xs font-black ${
-            variantSet === 'danger' ? 'bg-red-500/20 text-red-500' : 
-            variantSet === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 
-            'bg-toxic/20 text-toxic'
-          }`}>
-            {count}
-          </span>
-        </div>
-        
-        {/* Search Bar */}
+    <div className="glass p-8 rounded-[2.5rem] border-white/5 flex flex-col h-[600px] relative overflow-hidden group">
+      <div className="flex items-center justify-between mb-6">
         <div className="relative">
-          <input 
-            type="text" 
-            placeholder={`Buscar en ${title.split(' ')[0]}...`}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-toxic/50 outline-none transition-all placeholder:text-stone-600"
-          />
-          <div className="absolute right-3 top-2.5 text-stone-600">
-            <BarChart2 className="w-4 h-4" />
-          </div>
+          <h3 className="text-xl font-black text-white">{title}</h3>
+          <div className={`mt-1 h-1 w-12 rounded-full ${isDanger ? 'bg-red-500' : 'bg-emerald-500'}`} />
+        </div>
+        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black ${isDanger ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'} border uppercase tracking-widest`}>
+          {count}
         </div>
       </div>
-      
-      <div className="flex-1 overflow-y-auto custom-scrollbar max-h-[500px]">
-        {filteredUsers.length > 0 ? (
-          <div className="divide-y divide-white/5">
-            {filteredUsers.map((user) => (
-              <div key={user} className="group p-5 flex items-center justify-between hover:bg-white/[0.03] transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl overflow-hidden glass border border-white/10 flex-shrink-0 group-hover:scale-105 transition-transform bg-dark-800 flex items-center justify-center font-black text-toxic relative">
-                     <div 
-                      className="absolute inset-0 flex items-center justify-center text-xl uppercase"
-                      style={{
-                        background: `linear-gradient(135deg, ${['#ff0080', '#7928ca', '#0070f3', '#f5a623', '#4ade80'][user.length % 5]}22, transparent)`
-                      }}
-                     >
-                      {user[0]}
-                     </div>
-                     <img 
-                      src={`https://unavatar.io/instagram/${user}?fallback=false`} 
-                      alt={user}
-                      className="w-full h-full object-cover relative z-10"
-                      loading="lazy"
-                      onError={(e) => { e.target.style.opacity = '0'; }}
-                    />
-                  </div>
-                  <div>
-                    <p className="font-black text-stone-100 group-hover:text-toxic transition-colors tracking-tight">@{user}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                       <span className="w-1.5 h-1.5 rounded-full bg-toxic/40" />
-                       <p className="text-[10px] text-stone-500 uppercase font-black tracking-widest">Ver Perfil</p>
-                    </div>
-                  </div>
+
+      {isDanger && setTurboMode && (
+        <div className="mb-6 p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between group/turbo">
+           <div className="flex items-center gap-3">
+             <div className={`w-2 h-2 rounded-full ${turboMode ? 'bg-rose-500 animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'bg-stone-600'}`} />
+             <div>
+               <p className="text-[10px] font-black uppercase tracking-widest text-white">Modo Limpieza Turbo</p>
+               <p className="text-[9px] text-stone-500 font-bold italic">La extensión lo hace por ti</p>
+             </div>
+           </div>
+           <button 
+            onClick={() => setTurboMode(!turboMode)}
+            className={`w-12 h-6 rounded-full p-1 transition-all duration-300 ${turboMode ? 'bg-rose-500' : 'bg-stone-800'}`}
+           >
+             <div className={`w-4 h-4 bg-white rounded-full transition-all duration-300 ${turboMode ? 'translate-x-6' : 'translate-x-0'}`} />
+           </button>
+        </div>
+      )}
+
+      <div className="relative mb-6">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-600" />
+        <input 
+          type="text" 
+          placeholder={`Buscar en ${title}...`}
+          className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-4 pl-12 pr-6 text-sm font-medium text-white focus:outline-none focus:border-white/20 transition-all"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+        {filtered.length > 0 ? (
+          filtered.map(u => (
+            <div key={u} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/5 transition-all group/item">
+              <div className="flex items-center gap-4">
+                <AvatarFallback name={u} />
+                <div>
+                  <p className="font-bold text-sm text-white transition-colors group-hover/item:text-toxic">@{u}</p>
+                  <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
+                    <span className={`w-1.5 h-1.5 rounded-full ${isDanger ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                    {isDanger ? 'Sin retorno' : 'Mutuo'}
+                  </p>
                 </div>
-                <a 
-                  href={`https://instagram.com/${user}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  title="Abrir perfil para dejar de seguir"
-                  className="p-3 bg-white/5 rounded-xl hover:bg-toxic hover:text-white transition-all transform group-hover:translate-x-1 flex items-center gap-2"
-                >
-                  <Instagram className="w-4 h-4" />
-                  <span className="text-[10px] font-bold uppercase hidden group-hover:inline">Unfollow</span>
-                </a>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="p-20 text-center space-y-4">
-            <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto">
-              {search ? <AlertCircle className="w-10 h-10 text-stone-600" /> : <CheckCircle2 className="w-10 h-10 text-emerald-500" />}
+              
+              <button 
+                onClick={() => onUnfollow ? onUnfollow(u) : window.open(`https://www.instagram.com/${u}/`, '_blank')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  isDanger 
+                    ? (turboMode ? 'bg-rose-500 text-white shadow-lg scale-105' : 'bg-white/5 text-stone-400 hover:bg-red-500 hover:text-white') 
+                    : 'bg-white/5 text-stone-400 hover:bg-toxic hover:text-white'
+                }`}
+              >
+                {isDanger && turboMode ? <Zap className="w-3 h-3" /> : <Instagram className="w-3 h-3" />}
+                {isDanger ? (turboMode ? 'AUTO' : 'VER PERFIL') : 'VER PERFIL'}
+              </button>
             </div>
-            <p className="text-stone-400 font-medium">
-              {search ? 'No se encontraron coincidencias' : '¡Sin traidores a la vista!'}
-            </p>
+          ))
+        ) : (
+          <div className="py-20 text-center">
+            <p className="text-stone-600 font-bold uppercase tracking-widest text-[10px]">No hay resultados</p>
           </div>
         )}
       </div>
@@ -447,6 +459,18 @@ export default function App() {
   };
 
   const [globalActivity, setGlobalActivity] = useState([]);
+  const [turboMode, setTurboMode] = useState(false);
+
+  const handleUnfollowAction = (username) => {
+    const igPath = `https://www.instagram.com/${username}/`;
+    if (turboMode) {
+      // Send command to extension
+      window.postMessage({ type: 'TOXIC_TURBO_UNFOLLOW', username }, '*');
+    } else {
+      // Normal behavior: Open profile
+      window.open(igPath, '_blank');
+    }
+  };
 
   const GlobalFeed = ({ activity }) => {
     if (!activity || activity.length === 0) return null;
@@ -1251,7 +1275,10 @@ export default function App() {
                     title="Traidores (No te siguen de vuelta)" 
                     users={results.notFollowingBack} 
                     count={results.notFollowingBack.length} 
-                    variantSet="danger" 
+                    variantSet="danger"
+                    turboMode={turboMode}
+                    setTurboMode={setTurboMode}
+                    onUnfollow={handleUnfollowAction}
                   />
                 </div>
                 <div className="lg:col-span-4">
@@ -1260,6 +1287,7 @@ export default function App() {
                     users={results.fans} 
                     count={results.fans.length} 
                     variantSet="success" 
+                    onUnfollow={handleUnfollowAction}
                   />
                 </div>
                 <div className="lg:col-span-4 space-y-8">

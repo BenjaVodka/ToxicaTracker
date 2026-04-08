@@ -1,10 +1,17 @@
-// inject.js runs on ToxicTracker web to pass local data securely
+// inject.js runs on ToxicTracker web to pass local data and commands
 chrome.storage.local.get(['toxicData'], (result) => {
     if (result.toxicData) {
-        // Send data directly to React via browser events
         window.postMessage({ type: 'TOXIC_EXTENSION_DATA', payload: result.toxicData }, '*');
-        
-        // Clean up memory
         chrome.storage.local.remove('toxicData');
+    }
+});
+
+// Listen for Turbo Unfollow commands from the React App
+window.addEventListener('message', (event) => {
+    if (event.data.type === 'TOXIC_TURBO_UNFOLLOW' && event.data.username) {
+        chrome.runtime.sendMessage({ 
+            type: 'REQUEST_UNFOLLOW', 
+            username: event.data.username 
+        });
     }
 });
