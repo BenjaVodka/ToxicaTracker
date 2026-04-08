@@ -99,10 +99,10 @@ const ShareCard = ({ results }) => {
         low: "Suertudote, wey. Pero no te acostumbres, por ahí te anda rondando un pendejo traidor. 🌱"
       },
       global: {
-        ultra: "Your account is pure trash, loser. You are surrounded by fake bastards who hate your guts. 🚩",
-        high: "Total disaster. Betrayal is everywhere. You should probably delete this shitty account. 💣",
-        mid: "Meh. Half of your circle is fake, and the other half probably talks behind your back. 👀",
-        low: "Lucky bastard. Stay clean for now, but don't get too comfortable, piece of work. 🌱"
+        ultra: "Tu cuenta es pura basura, perdedor. Estás rodeado de bastardos falsos que te odian de verdad. 🚩",
+        high: "Desastre total. Hay traición por todos lados. Deberías borrar esta cuenta de mierda ya. 💣",
+        mid: "Meh. La mitad de tu círculo es falso y la otra mitad habla a tus espaldas, infeliz. 👀",
+        low: "Maldito suertudo. Quédate limpio por ahora, pero no te relajes, pedazo de nada. 🌱"
       }
     };
 
