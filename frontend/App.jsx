@@ -43,17 +43,8 @@ const Nav = ({ token, results, handleLogout, onLoginClick }) => (
         <div className="flex items-center gap-4">
           <button 
             onClick={() => {
-              if (results) {
-                 document.getElementById('results-section')?.scrollIntoView({behavior: 'smooth'});
-              } else {
-                 const resultsSection = document.getElementById('results-header');
-                 if (resultsSection) {
-                   resultsSection.scrollIntoView({behavior: 'smooth'});
-                 } else {
-                   // Si no hay resultados, avisamos de forma sutil
-                   window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-                 }
-              }
+              const target = document.getElementById('results-section') || document.getElementById('loading-section') || document.getElementById('features');
+              target?.scrollIntoView({behavior: 'smooth'});
             }} 
             className="hidden md:flex items-center gap-2 text-toxic font-black text-xs uppercase tracking-widest hover:text-white transition-colors"
           >
@@ -530,6 +521,36 @@ export default function App() {
     }
   }, [token]);
 
+  // --- NUEVO: Polling para detectar cuando la extensión sube datos ---
+  React.useEffect(() => {
+    let interval;
+    if (token && !results) {
+      interval = setInterval(() => {
+        fetch(`${API_BASE_URL}/api/analysis/latest`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => res.status === 200 ? res.json() : null)
+        .then(data => {
+          if (data) {
+            setResults({
+              message: "¡Datos detectados! Sincronizando... 🚀",
+              followersCount: data.followersCount,
+              followingCount: data.followingCount,
+              notFollowingBack: data.notFollowingMeBack || [], 
+              lostFollowers: data.newUnfollowers || [],
+              fans: data.fans || [],
+              toxicScore: data.toxicScore || 0,
+              mutualityRate: data.mutualityRate || 0,
+              isFromCloud: true
+            });
+          }
+        })
+        .catch(() => {});
+      }, 5000); // Cada 5 segundos comprobamos si hay chisme nuevo
+    }
+    return () => clearInterval(interval);
+  }, [token, !!results]);
+
   const handleAuth = async () => {
     setLoading(true);
     setError(null);
@@ -707,6 +728,18 @@ export default function App() {
         {!results ? (
           <>
             <Hero />
+            
+            {checkingHistory && (
+              <section id="loading-section" className="py-20 -mt-10">
+                <div className="container mx-auto px-6 text-center">
+                  <div className="glass p-12 rounded-[2.5rem] border-toxic/20 bg-toxic/5 inline-block">
+                    <Loader2 className="w-12 h-12 text-toxic animate-spin mx-auto mb-4" />
+                    <h3 className="text-xl font-bold mb-2">Sincronizando con la nube...</h3>
+                    <p className="text-stone-400 text-sm">Buscando tus datos de Instagram. Un momento por favor. ☁️</p>
+                  </div>
+                </div>
+              </section>
+            )}
 
             <section id="upload" className="py-20 -mt-20">
               <div className="container mx-auto px-6 max-w-4xl">
