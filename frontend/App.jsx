@@ -56,13 +56,35 @@ const ShareCard = ({ results }) => {
   const getToxicityDiagnosis = (res) => {
     if (!res) return { text: "No hay datos", emoji: "❓", title: "N/A", color: "text-stone-500", bg: "bg-stone-500/10", border: "border-stone-500/20" };
     const score = res.toxicScore;
-    const count = res.notFollowingBack.length;
+    const country = (res.country || 'global').toLowerCase();
     
-    // Simplificado para la tarjeta
-    if (score >= 90) return { emoji: "☢️", text: "Tu cuenta es Chernobyl. Tienes traidores infiltrados hasta en la sopa. 🚩", bg: "bg-red-500/10", border: "border-red-500/20" };
-    if (score >= 70) return { emoji: "🕵️‍♂️", text: "Vives al límite. Hay traición en cada esquina. Duerme con un ojo abierto. 💣", bg: "bg-rose-500/10", border: "border-rose-500/20" };
-    if (score >= 40) return { emoji: "🧐", text: "Ni tan santo, ni tan tóxico. Tienes un círculo de amigos... sospechoso. 👀", bg: "bg-amber-500/10", border: "border-amber-500/20" };
-    return { emoji: "🌱", text: "Todo tranqui. Pocos traidores, mucha paz. Sigue así, campeón. ✨", bg: "bg-emerald-500/10", border: "border-emerald-500/20" };
+    const localizedQuotes = {
+      chile: {
+        ultra: "Tu cuenta es terrible penca po. Está llena de weones fomes que no te siguen. 🚩",
+        high: "Vives al 3 y al 4. Hay pura traición en tu Insta, po. Duerme con un ojo abierto. 💣",
+        mid: "Ni tan santo, ni tan tóxico. Tienes un círculo de amigos... sospechoso, po. 👀",
+        low: "Todo tranqui, po. Pocos traidores, mucha paz. Sigue así, campeón. ✨"
+      },
+      mexico: {
+        ultra: "¡No mames! Tu cuenta es un desmadre total. Pura gente tóxica te rodea, wey. 🚩",
+        high: "Te traen de bajada. Hay pura traición aquí. ¡Ponte pilas! 💣",
+        mid: "Ni muy muy, ni tan tan. Tienes unos compas... de dudosa procedencia. 👀",
+        low: "Todo bien, carnal. Pura gente leal por aquí. ¡Échale ganas! ✨"
+      },
+      global: {
+        ultra: "Tu cuenta es Chernobyl. Tienes traidores infiltrados hasta en la sopa. 🚩",
+        high: "Vives al límite. Hay traición en cada esquina. Duerme con un ojo abierto. 💣",
+        mid: "Ni tan santo, ni tan tóxico. Tienes un círculo de amigos... sospechoso. 👀",
+        low: "Todo tranqui. Pocos traidores, mucha paz. Sigue así, campeón. ✨"
+      }
+    };
+
+    const quotes = localizedQuotes[country] || localizedQuotes.global;
+
+    if (score >= 90) return { emoji: "☢️", text: quotes.ultra, bg: "bg-red-500/10", border: "border-red-500/20", color: "text-red-500" };
+    if (score >= 70) return { emoji: "🕵️‍♂️", text: quotes.high, bg: "bg-rose-500/10", border: "border-rose-500/20", color: "text-rose-500" };
+    if (score >= 40) return { emoji: "🧐", text: quotes.mid, bg: "bg-amber-500/10", border: "border-amber-500/20", color: "text-amber-500" };
+    return { emoji: "🌱", text: quotes.low, bg: "bg-emerald-500/10", border: "border-emerald-500/20", color: "text-emerald-500" };
   };
 
   const diag = getToxicityDiagnosis(results);

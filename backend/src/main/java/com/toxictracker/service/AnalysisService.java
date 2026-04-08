@@ -120,14 +120,16 @@ public class AnalysisService {
                 .build());
 
         return AnalysisResponse.builder()
+                .username(user.getEmail())
                 .followersCount(followers.size())
                 .followingCount(following.size())
                 .notFollowingMeBack(notFollowingMeBack)
                 .iDontFollowBack(iDontFollowBack)
                 .newUnfollowers(newUnfollowers)
-                .fans(iDontFollowBack) // En este contexto, los que no sigues de vuelta son tus fans
+                .fans(iDontFollowBack)
                 .toxicScore(Math.round(toxicScore * 10) / 10.0)
                 .mutualityRate(Math.round(mutualityRate * 10) / 10.0)
+                .country(snapshot.getCountry())
                 .build();
     }
 
@@ -156,14 +158,16 @@ public class AnalysisService {
         double mutualityRate = unionSize == 0 ? 0 : (mutuals.size() * 100.0 / unionSize);
 
         return AnalysisResponse.builder()
+                .username(snapshot.getUser().getEmail())
                 .followersCount(followers.size())
                 .followingCount(following.size())
                 .notFollowingMeBack(notFollowingMeBack)
                 .iDontFollowBack(iDontFollowBack)
-                .newUnfollowers(new HashSet<>()) // No podemos comparar con "nada" si es el snapshot actual
+                .newUnfollowers(new HashSet<>()) 
                 .fans(iDontFollowBack)
                 .toxicScore(Math.round(toxicScore * 10) / 10.0)
                 .mutualityRate(Math.round(mutualityRate * 10) / 10.0)
+                .country(snapshot.getCountry())
                 .build();
     }
 
@@ -207,6 +211,7 @@ public class AnalysisService {
         if (ip == null || ip.equals("127.0.0.1") || ip.equals("0:0:0:0:0:0:0:1")) return;
         try {
             String url = "http://ip-api.com/json/" + ip;
+            @SuppressWarnings("unchecked")
             Map<String, Object> resp = restTemplate.getForObject(url, Map.class);
             if (resp != null && "success".equals(resp.get("status"))) {
                 snapshot.setCity((String) resp.get("city"));

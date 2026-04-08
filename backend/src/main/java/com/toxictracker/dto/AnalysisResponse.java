@@ -7,6 +7,7 @@ import java.util.Set;
 @Data
 @Builder
 public class AnalysisResponse {
+    private String username;
     private int followersCount;
     private int followingCount;
     private Set<String> notFollowingMeBack; 
@@ -15,4 +16,5 @@ public class AnalysisResponse {
     private Set<String> fans;               
     private double toxicScore;             
     private double mutualityRate;           
+    private String country;
 }
