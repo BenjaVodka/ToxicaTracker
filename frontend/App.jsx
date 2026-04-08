@@ -205,7 +205,7 @@ const AvatarFallback = ({ name }) => (
   </div>
 )
 
-const UserList = ({ title, users, count, variantSet, turboMode, setTurboMode, onUnfollow }) => {
+const UserList = ({ title = "", users = [], count = 0, variantSet = "success", turboMode = false, setTurboMode = null, onUnfollow = null }) => {
   const [search, setSearch] = useState("");
   const filtered = users.filter(u => u.toLowerCase().includes(search.toLowerCase()));
 
@@ -876,7 +876,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-stone-950 text-white font-sans selection:bg-toxic/30">
       <Nav 
         token={token} 
         results={results}
