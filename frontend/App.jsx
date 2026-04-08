@@ -61,8 +61,6 @@ const ShareCard = ({ results }) => {
     .split('@')[0]
     .replace(/\s+/g, '') || 'usuario';
   const viewerName = String(results.fullName || '').trim();
-  const viewerPhotoUrl = buildInstagramProxyUrl(viewerHandle);
-  const viewerPhotoFallbackUrl = results.profilePhotoUrl || '';
   
   const getTheme = (s) => {
     if (s >= 70) return { 
@@ -149,12 +147,7 @@ const ShareCard = ({ results }) => {
       {/* Profile Section */}
       <div className="relative z-10 flex flex-col items-center mb-8 px-8">
         <div className="relative p-0.5 rounded-[1.5rem] bg-gradient-to-tr transition-all" style={{ backgroundImage: `linear-gradient(to top right, transparent, rgba(255,255,255,0.1))` }}>
-           <UserAvatar
-             name={viewerHandle}
-             imageUrl={viewerPhotoUrl}
-             fallbackImageUrl={viewerPhotoFallbackUrl}
-             size="w-20 h-20"
-           />
+           <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-white/15 to-white/5 border border-white/10 backdrop-blur-md" />
            <div className={`absolute -bottom-1 -right-1 p-1.5 rounded-lg bg-gradient-to-tr ${theme.accent} shadow-xl border-2 border-stone-900`}>
               <CheckCircle2 className="w-3 h-3 text-stone-950" />
            </div>
