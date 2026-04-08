@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import html2canvas from 'html2canvas'
 import {
   HeartCrack,
   Eye,
@@ -21,7 +22,9 @@ import {
   AlertCircle,
   CloudLightning,
   Sparkles,
-  BarChart2
+  BarChart2,
+  Download,
+  Share2
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { auth, googleProvider } from './firebase'
@@ -395,6 +398,54 @@ export default function App() {
   const [checkingHistory, setCheckingHistory] = useState(false);
   const [history, setHistory] = useState([]);
   const [showShareCard, setShowShareCard] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+
+  const handleDownloadShareCard = async () => {
+    const card = document.getElementById('share-card');
+    if (!card) return;
+
+    try {
+      setIsCapturing(true);
+      const canvas = await html2canvas(card, {
+        scale: 2,
+        backgroundColor: '#000000',
+        useCORS: true,
+        logging: false
+      });
+
+      const dataUrl = canvas.toDataURL('image/png');
+
+      // Native Share for Mobile
+      if (navigator.share) {
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], 'toxic-report.png', { type: 'image/png' });
+        
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'Mi Informe Tóxico 🕵️‍♂️🔥',
+            text: 'Mira mi diagnóstico en TóxicaTracker 🚀'
+          });
+          return;
+        } catch (e) {
+          // Fallback to download if share is cancelled or fails
+        }
+      }
+
+      // Fallback: Download for PC/Other
+      const link = document.createElement('a');
+      link.download = `toxic-report-${results.toxicScore}.png`;
+      link.href = dataUrl;
+      link.click();
+
+    } catch (err) {
+      console.error("Error generating image:", err);
+      alert("No pudimos generar la imagen. Intenta sacar una captura manual 📸");
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
   const [globalActivity, setGlobalActivity] = useState([]);
 
   const GlobalFeed = ({ activity }) => {
@@ -1119,8 +1170,37 @@ export default function App() {
                       </div>
                     </motion.div>
                     
-                    <div className="absolute bottom-10 flex flex-col items-center gap-4">
-                       <p className="text-white/60 text-sm font-medium animate-pulse">Sacar captura de pantalla para stories 📸</p>
+                    <div className="absolute bottom-10 flex flex-col items-center gap-6 w-full max-w-[380px]">
+                       <button 
+                        onClick={handleDownloadShareCard}
+                        disabled={isCapturing}
+                        className={`w-full glass py-4 rounded-2xl flex items-center justify-center gap-3 font-black uppercase tracking-widest text-sm transition-all shadow-2xl ${
+                          isCapturing ? 'bg-white/5 text-stone-500' : 'bg-toxic text-white hover:scale-105 active:scale-95'
+                        }`}
+                       >
+                         {isCapturing ? (
+                           <>
+                            <div className="w-4 h-4 border-2 border-stone-500 border-t-white rounded-full animate-spin" />
+                            Capturando...
+                           </>
+                         ) : (
+                           <>
+                            <Download className="w-5 h-5" /> Descargar Imagen
+                           </>
+                         )}
+                       </button>
+
+                       <div className="flex flex-col items-center gap-2">
+                         <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Paso 2: Subir a Instagram</p>
+                         <a 
+                          href="https://www.instagram.com/reels/create/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-toxic hover:text-white transition-colors text-xs font-bold underline"
+                         >
+                           Ir a Subir Historias ↗
+                         </a>
+                       </div>
                     </div>
                   </motion.div>
                 )}
