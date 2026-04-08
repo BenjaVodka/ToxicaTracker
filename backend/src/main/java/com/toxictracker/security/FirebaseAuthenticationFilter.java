@@ -56,12 +56,14 @@ public class FirebaseAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             } catch (Exception e) {
-                log.error("Error validando token de Firebase: {}", e.getMessage());
+                log.error("❌ FALLO DE AUTENTICACIÓN: {} - Token: {}", e.getMessage(), idToken.substring(0, Math.min(idToken.length(), 10)) + "...");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
-                response.getWriter().write("{\"error\": \"Token inválido o expirado: " + e.getMessage() + "\"}");
-                return; // Detenemos la cadena aquí para que no llegue al controlador
+                response.getWriter().write("{\"error\": \"Error de Firebase: " + e.getMessage() + "\"}");
+                return;
             }
+        } else if (authHeader != null) {
+            log.warn("⚠️ Header Authorization presente pero mal formado: {}", authHeader);
         }
 
         filterChain.doFilter(request, response);
