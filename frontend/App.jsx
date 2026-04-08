@@ -61,7 +61,8 @@ const ShareCard = ({ results }) => {
     .split('@')[0]
     .replace(/\s+/g, '') || 'usuario';
   const viewerName = String(results.fullName || '').trim();
-  const viewerPhotoUrl = results.profilePhotoUrl || '';
+  const viewerPhotoUrl = buildInstagramProxyUrl(viewerHandle);
+  const viewerPhotoFallbackUrl = results.profilePhotoUrl || '';
   
   const getTheme = (s) => {
     if (s >= 70) return { 
@@ -148,7 +149,12 @@ const ShareCard = ({ results }) => {
       {/* Profile Section */}
       <div className="relative z-10 flex flex-col items-center mb-8 px-8">
         <div className="relative p-0.5 rounded-[1.5rem] bg-gradient-to-tr transition-all" style={{ backgroundImage: `linear-gradient(to top right, transparent, rgba(255,255,255,0.1))` }}>
-           <UserAvatar name={viewerHandle} imageUrl={viewerPhotoUrl} size="w-20 h-20" />
+           <UserAvatar
+             name={viewerHandle}
+             imageUrl={viewerPhotoUrl}
+             fallbackImageUrl={viewerPhotoFallbackUrl}
+             size="w-20 h-20"
+           />
            <div className={`absolute -bottom-1 -right-1 p-1.5 rounded-lg bg-gradient-to-tr ${theme.accent} shadow-xl border-2 border-stone-900`}>
               <CheckCircle2 className="w-3 h-3 text-stone-950" />
            </div>
@@ -216,6 +222,29 @@ const ShareDialog = ({ results, onClose }) => {
     try {
       const element = document.querySelector("#toxic-share-card-capture");
       if (!element) throw new Error("Element not found");
+
+      const waitForImages = async (root) => {
+        const images = Array.from(root.querySelectorAll('img'));
+        await Promise.all(images.map((img) => {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          return new Promise((resolve) => {
+            const cleanup = () => {
+              img.removeEventListener('load', onDone);
+              img.removeEventListener('error', onDone);
+            };
+            const onDone = () => {
+              cleanup();
+              resolve();
+            };
+            img.addEventListener('load', onDone, { once: true });
+            img.addEventListener('error', onDone, { once: true });
+            window.setTimeout(onDone, 3500);
+          });
+        }));
+      };
+
+      await waitForImages(element);
+      await new Promise((resolve) => window.setTimeout(resolve, 120));
       
       const canvas = await html2canvas(element, { 
         useCORS: true, 
@@ -441,14 +470,15 @@ const MetricCard = ({ icon, label, value, subLabel, highlight }) => (
   </div>
 )
 
-const UserAvatar = ({ name, imageUrl = '', size = "w-12 h-12" }) => {
+const UserAvatar = ({ name, imageUrl = '', fallbackImageUrl = '', size = "w-12 h-12" }) => {
   const [loaded, setLoaded] = useState(false);
   const [sourceIndex, setSourceIndex] = useState(0);
 
   // Fallback Moderno de Cristal si Instagram falla
   const initials = name ? name.substring(0, 1).toUpperCase() : '?';
-  const fallbackUrl = name ? `https://unavatar.io/instagram/${encodeURIComponent(name)}` : '';
-  const sources = [imageUrl, fallbackUrl]
+  const proxyFallbackUrl = buildInstagramProxyUrl(name);
+  const directFallbackUrl = name ? `https://unavatar.io/instagram/${encodeURIComponent(name)}` : '';
+  const sources = [imageUrl, fallbackImageUrl, proxyFallbackUrl, directFallbackUrl]
     .map((url) => (typeof url === 'string' ? url.trim() : ''))
     .filter(Boolean)
     .filter((url, index, arr) => arr.indexOf(url) === index);
@@ -457,7 +487,7 @@ const UserAvatar = ({ name, imageUrl = '', size = "w-12 h-12" }) => {
   useEffect(() => {
     setLoaded(false);
     setSourceIndex(0);
-  }, [name, imageUrl]);
+  }, [name, imageUrl, fallbackImageUrl]);
 
   return (
     <div className={`${size} rounded-2xl overflow-hidden glass border border-white/10 flex-shrink-0 bg-stone-900 flex items-center justify-center relative group`}>
@@ -475,6 +505,8 @@ const UserAvatar = ({ name, imageUrl = '', size = "w-12 h-12" }) => {
           alt={name}
           className={`w-full h-full object-cover relative z-10 transition-all duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}
           loading="lazy"
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
           onLoad={() => setLoaded(true)}
           onError={() => {
             if (sourceIndex < sources.length - 1) {
@@ -549,7 +581,11 @@ const UserList = ({ title = "", users = [], count = 0, variantSet = "success", t
           filtered.map(u => (
             <div key={u} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/5 transition-all group/item">
               <div className="flex items-center gap-4">
-                <UserAvatar name={u} imageUrl={userPhotoMap[u] || ''} />
+                <UserAvatar
+                  name={u}
+                  imageUrl={buildInstagramProxyUrl(u)}
+                  fallbackImageUrl={userPhotoMap[u] || ''}
+                />
                 <div>
                   <p className="font-bold text-sm text-white transition-colors group-hover/item:text-toxic">@{u}</p>
                   <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
@@ -729,6 +765,11 @@ const postToSelf = (data) => {
 };
 
 const authHeaders = (token) => (token ? { 'Authorization': `Bearer ${token}` } : undefined);
+
+const buildInstagramProxyUrl = (username) => {
+  const handle = String(username || '').trim().replace(/^@/, '');
+  return handle ? `https://unavatar.io/instagram/${encodeURIComponent(handle)}` : '';
+};
 
 const normalizeUsername = (value) => String(value || '').trim().replace(/^@/, '');
 
