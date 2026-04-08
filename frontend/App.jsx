@@ -648,20 +648,46 @@ export default function App() {
         onLoginClick={() => setShowAuth(true)} 
       />
       
-      {checkingHistory && (
-        <div className="fixed inset-0 z-[60] bg-dark-950/80 backdrop-blur-xl flex flex-col items-center justify-center gap-6">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full border-4 border-toxic/20 animate-pulse" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <CloudLightning className="w-10 h-10 text-toxic animate-bounce" />
+      <AnimatePresence>
+        {(loading || checkingHistory) && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="fixed inset-0 z-[100] bg-dark-950/90 backdrop-blur-2xl flex flex-col items-center justify-center gap-8"
+          >
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full border-4 border-toxic/20 animate-pulse" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <CloudLightning className="w-12 h-12 text-toxic animate-bounce" />
+              </div>
+              <div className="absolute -inset-4 border border-toxic/10 rounded-full animate-[spin_4s_linear_infinite]" />
             </div>
-          </div>
-          <div className="text-center">
-             <h3 className="text-xl font-black text-white mb-2">Recuperando tu chisme...</h3>
-             <p className="text-stone-400 text-sm animate-pulse">Sincronizando con la base de datos segura ☁️</p>
-          </div>
-        </div>
-      )}
+            
+            <div className="text-center space-y-2">
+              <h3 className="text-2xl font-black text-white tracking-tighter">
+                {loading ? "Autenticando..." : "Buscando tu chisme..."}
+              </h3>
+              <p className="text-stone-400 text-sm font-medium animate-pulse flex items-center justify-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-500" /> 
+                {loading ? "Configurando conexión segura" : "Sincronizando con la nube de Render"}
+              </p>
+            </div>
+            
+            {/* Disclaimer para Render Cold Start */}
+            {checkingHistory && (
+              <motion.p 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                transition={{ delay: 5 }}
+                className="max-w-xs text-[10px] text-stone-500 text-center leading-relaxed"
+              >
+                Nota: El servidor gratuito de Render tarda unos 50s en despertar tras periodos de inactividad. ¡Gracias por tu paciencia! ☕
+              </motion.p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showAuth && (
@@ -728,18 +754,6 @@ export default function App() {
         {!results ? (
           <>
             <Hero />
-            
-            {checkingHistory && (
-              <section id="loading-section" className="py-20 -mt-10">
-                <div className="container mx-auto px-6 text-center">
-                  <div className="glass p-12 rounded-[2.5rem] border-toxic/20 bg-toxic/5 inline-block">
-                    <Loader2 className="w-12 h-12 text-toxic animate-spin mx-auto mb-4" />
-                    <h3 className="text-xl font-bold mb-2">Sincronizando con la nube...</h3>
-                    <p className="text-stone-400 text-sm">Buscando tus datos de Instagram. Un momento por favor. ☁️</p>
-                  </div>
-                </div>
-              </section>
-            )}
 
             <section id="upload" className="py-20 -mt-20">
               <div className="container mx-auto px-6 max-w-4xl">
