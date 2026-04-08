@@ -840,9 +840,11 @@ export default function App() {
       if (user) {
         setLoading(true);
         try {
-          const jwtToken = await user.getIdToken(true); // Forzamos token fresco
+          const jwtToken = await user.getIdToken(true); 
           setToken(jwtToken);
-          localStorage.setItem('toxic_token', jwtToken);
+          localStorage.setItem('toxic_session', jwtToken);
+          // Notificamos a la extensión en tiempo real
+          window.postMessage({ type: 'TOXIC_SESSION_UPDATE', token: jwtToken }, '*');
           setLoading(false);
         } catch (err) {
           console.error("Error renovando token:", err);
@@ -850,7 +852,8 @@ export default function App() {
         }
       } else {
         setToken(null);
-        localStorage.removeItem('toxic_token');
+        localStorage.removeItem('toxic_session');
+        window.postMessage({ type: 'TOXIC_SESSION_UPDATE', token: null }, '*');
       }
     });
 

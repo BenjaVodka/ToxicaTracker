@@ -13,15 +13,26 @@
         .instructions { font-size: 0.8rem; text-align: left; margin-top: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px;}
     </style>
 </head>
-<body>
-    <h1>Tóxica<span class="toxic">Tracker</span></h1>
-    <div class="instructions">
-        1. Entra a <b>instagram.com</b> e inicia sesión.<br>
-        2. Vuelve a abrir esta ventana.<br>
-        3. Haz click en el botón abajo.
+    <div id="auth-view" style="display:none;">
+        <div style="padding: 25px; background: rgba(16, 185, 129, 0.03); border: 1px dashed rgba(16, 185, 129, 0.3); border-radius: 20px; margin-top: 10px;">
+            <div style="font-size: 2.5rem; margin-bottom: 15px;">🔐</div>
+            <h2 style="font-size: 1.1rem; margin-bottom: 10px; font-weight: 800; letter-spacing: -0.025em;">SESIÓN REQUERIDA</h2>
+            <p style="font-size: 0.8rem; color: #a8a29e; margin-bottom: 20px; line-height: 1.5;">Por seguridad, debes iniciar sesión en la web de <b>ToxicTracker</b> para usar la extensión.</p>
+            <button id="loginBtn" style="background-color: white; color: black; border-radius: 12px;">Ir a Iniciar Sesión 🚀</button>
+        </div>
+        <p style="font-size: 10px; color: #52525b; margin-top: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em;">Protección Anti-Bot Activa</p>
     </div>
-    <button id="startBtn">Extraer Datos ⚡</button>
-    <div id="status">Esperando...</div>
+
+    <div id="main-container" style="display:none;">
+        <div class="instructions">
+            <span class="toxic" style="font-weight: 800;">READY TO SCAN</span><br>
+            1. Ve a <b>instagram.com</b>.<br>
+            2. Haz click en el botón abajo.<br>
+            3. Analiza el drama en la web.
+        </div>
+        <button id="startBtn">Extraer Datos ⚡</button>
+        <div id="status">Esperando instrucción...</div>
+    </div>
 
     <script src="popup.js"></script>
 </body>

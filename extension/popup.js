@@ -1,3 +1,24 @@
+// Check session on load
+document.addEventListener('DOMContentLoaded', () => {
+    chrome.storage.local.get(['toxic_session'], (result) => {
+        const authView = document.getElementById('auth-view');
+        const mainContainer = document.getElementById('main-container');
+
+        if (result.toxic_session) {
+            authView.style.display = 'none';
+            mainContainer.style.display = 'block';
+        } else {
+            authView.style.display = 'block';
+            mainContainer.style.display = 'none';
+        }
+    });
+});
+
+// Redirect to Web App for Login
+document.getElementById('loginBtn').addEventListener('click', () => {
+    chrome.tabs.create({ url: "https://toxicatracker.vercel.app/" });
+});
+
 document.getElementById('startBtn').addEventListener('click', async () => {
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
