@@ -584,7 +584,6 @@ export default function App() {
 
     if (score >= 90) return { 
       emoji: "☢️", 
-      title: "NIVEL: ACCIDENTE NUCLEAR", 
       text: getRandom(phrases.nuclear),
       color: "text-red-500",
       bg: "bg-red-500/10",
@@ -592,7 +591,6 @@ export default function App() {
     };
     if (score >= 70) return { 
       emoji: "🕵️‍♂️", 
-      title: "NIVEL: CAMPO DE MINAS", 
       text: getRandom(phrases.minas),
       color: "text-rose-500",
       bg: "bg-rose-500/10",
@@ -600,7 +598,6 @@ export default function App() {
     };
     if (score >= 40) return { 
       emoji: "🧐", 
-      title: "NIVEL: SOSPECHAS ALTAS", 
       text: getRandom(phrases.sospechas),
       color: "text-amber-500",
       bg: "bg-amber-500/10",
@@ -608,7 +605,6 @@ export default function App() {
     };
     if (score >= 10) return { 
       emoji: "🌱", 
-      title: "NIVEL: JARDÍN SANO", 
       text: getRandom(phrases.jardin),
       color: "text-emerald-500",
       bg: "bg-emerald-500/10",
@@ -616,7 +612,6 @@ export default function App() {
     };
     return { 
       emoji: "😇", 
-      title: "NIVEL: SANTO DE INTERNET", 
       text: getRandom(phrases.santo),
       color: "text-toxic",
       bg: "bg-toxic/10",
@@ -1317,7 +1312,7 @@ export default function App() {
                         <div className="relative z-10">
                           <div className="flex items-center gap-2 mb-3">
                             <Zap className={`w-3.5 h-3.5 ${diag.color} fill-current`} />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">Diagnóstico IA</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">ANÁLISIS DE TU CUENTA</span>
                           </div>
                           <p className="text-sm font-bold text-white leading-relaxed">
                             "{diag.text}"
