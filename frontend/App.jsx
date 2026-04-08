@@ -459,6 +459,10 @@ export default function App() {
         setError("El servidor de la nube está despertando (Render cold start). Por favor, refresca la página en 30 segundos. ⏱️");
       }, 50000);
 
+      console.log("🔍 Intentando recuperar historial...");
+      console.log("🔗 URL Backend:", API_BASE_URL);
+      console.log("🔑 Token presente:", !!token);
+
       fetch(`${API_BASE_URL}/api/analysis/latest`, {
         headers: { 'Authorization': `Bearer ${token}` },
         signal: controller.signal
