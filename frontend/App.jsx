@@ -445,10 +445,27 @@ export default function App() {
   const [token, setToken] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
 
-  // Intentamos recuperar el JWT token almacenado previamente
+  // --- NUEVO: Gestión de sesión automática con Firebase ---
   React.useEffect(() => {
-    const savedToken = localStorage.getItem('toxic_token');
-    if (savedToken) setToken(savedToken);
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        setLoading(true);
+        try {
+          const jwtToken = await user.getIdToken(true); // Forzamos token fresco
+          setToken(jwtToken);
+          localStorage.setItem('toxic_token', jwtToken);
+          setLoading(false);
+        } catch (err) {
+          console.error("Error renovando token:", err);
+          setLoading(false);
+        }
+      } else {
+        setToken(null);
+        localStorage.removeItem('toxic_token');
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // --- NUEVO: Cargar historial persistente al entrar ---
