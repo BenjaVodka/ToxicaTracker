@@ -1102,34 +1102,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* AI Analyst Block */}
-              {(() => {
-                const diag = getToxicityDiagnosis(results);
-                return (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`mb-12 p-8 rounded-[2.5rem] border ${diag.border} ${diag.bg} relative overflow-hidden group`}
-                  >
-                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <span className="text-8xl">{diag.emoji}</span>
-                    </div>
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] ${diag.bg} border ${diag.border} ${diag.color}`}>
-                          {diag.title}
-                        </div>
-                        <span className="text-xs text-stone-500 font-bold uppercase tracking-widest flex items-center gap-2">
-                          <Zap className="w-3 h-3" /> Análisis de IA Sarcástica
-                        </span>
-                      </div>
-                      <p className="text-xl md:text-2xl font-bold text-white leading-tight max-w-2xl">
-                        "{diag.text}"
-                      </p>
-                    </div>
-                  </motion.div>
-                );
-              })()}
+
 
               <AnimatePresence>
                 {showShareCard && (
@@ -1294,9 +1267,36 @@ export default function App() {
                   />
                 </div>
                 <div className="lg:col-span-4 space-y-8">
-                  <div className="glass p-8 rounded-[2rem] border-white/5 bg-white/[0.01]">
-                    <GlobalFeed activity={globalActivity} />
-                  </div>
+                  {/* AI Analyst Block (Moved to sidebar) */}
+                  {(() => {
+                    const diag = getToxicityDiagnosis(results);
+                    return (
+                      <motion.div 
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className={`mb-8 p-6 rounded-[2rem] border ${diag.border} ${diag.bg} relative overflow-hidden group shadow-2xl`}
+                      >
+                        <div className="absolute -top-2 -right-2 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                          <span className="text-6xl">{diag.emoji}</span>
+                        </div>
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Zap className={`w-3.5 h-3.5 ${diag.color} fill-current`} />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">Diagnóstico IA</span>
+                          </div>
+                          <p className="text-sm font-bold text-white leading-relaxed">
+                            "{diag.text}"
+                          </p>
+                        </div>
+                      </motion.div>
+                    );
+                  })()}
+
+                  {globalActivity && globalActivity.length > 0 && (
+                    <div className="glass p-8 rounded-[2rem] border-white/5 bg-white/[0.01] mb-8">
+                      <GlobalFeed activity={globalActivity} />
+                    </div>
+                  )}
                   
                   {results.lostFollowers.length > 0 && (
                     <div className="glass p-6 rounded-3xl border-red-500/20 bg-red-500/5">
